@@ -70,18 +70,24 @@ pipeline {
 
                                 # PRINT HOW TO REPLICATE BUILD
                                 echo "
-                                    docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/$IMAGE
-
-                                    # in image:
-                                    cd tmp
-                                    git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git
-                                    mkdir build install
-                                    cmake ./root -DCMAKE_INSTALL_PREFIX=./install $OPTIONS
-                                    cmake --build . --target install -- -j$(nproc)
                                 "
 
                             '''
                         }
+                    }
+                }
+                post {
+                    failure {
+                        echo '''
+                            docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/$IMAGE
+
+                            # in image:
+                            cd tmp
+                            git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git
+                            mkdir build install
+                            cmake ./root -DCMAKE_INSTALL_PREFIX=./install $OPTIONS
+                            cmake --build . --target install -- -j$(nproc)
+                        '''
                     }
                 }
             }
