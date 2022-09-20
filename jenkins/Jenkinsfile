@@ -50,7 +50,7 @@ pipeline {
                                 # BUILD
                                 cd /tmp/
 
-                                # might be a security risk \/
+                                # might be a security risk but no code is executed
                                 export GIT_SSL_NO_VERIFY=1 
 
                                 for retry in {1..5}; do
