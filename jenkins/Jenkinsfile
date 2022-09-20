@@ -45,6 +45,7 @@ pipeline {
                                 # DEBUGGING
                                 ls /cvmfs
                                 env
+                                date
                             
                                 # BUILD
                                 cd /tmp/
