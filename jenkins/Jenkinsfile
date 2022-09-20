@@ -20,7 +20,7 @@ pipeline {
                 axes {
                     axis {
                         name 'IMAGE'
-                        values 'ghcr.io/olemorud/ubuntu:buildready', 'ghcr.io/olemorud/centos7:buildready'
+                        values 'ghcr.io/olemorud/ubuntu:buildready', 'ghcr.io/olemorud/centos7:buildready', 'ghcr.io/olemorud/centos8:buildready'
                     }
                 }
                 stages {
@@ -78,7 +78,7 @@ pipeline {
                         echo "cd tmp"
                         echo "git clone -b ${params.BRANCH} --single-branch --depth 1 https://github.com/root-project/root.git"
                         echo "mkdir build install"
-                        echo "cmake ./root -DCMAKE_INSTALL_PREFIX=./install $OPTIONS"
+                        echo "cmake ./root -DCMAKE_INSTALL_PREFIX=./install \$OPTIONS"
                         echo "cmake --build . --target install -- -j\$(nproc)"
                     }
                 }
