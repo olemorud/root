@@ -79,7 +79,7 @@ pipeline {
                         echo "git clone -b ${params.BRANCH} --single-branch --depth 1 https://github.com/root-project/root.git"
                         echo "mkdir build install"
                         echo "cmake ./root -DCMAKE_INSTALL_PREFIX=./install $OPTIONS"
-                        echo "cmake --build . --target install -- -j$(nproc)"
+                        echo "cmake --build . --target install -- -j\$(nproc)"
                     }
                 }
             }
