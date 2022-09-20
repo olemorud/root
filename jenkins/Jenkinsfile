@@ -50,6 +50,9 @@ pipeline {
                                 # BUILD
                                 cd /tmp/
 
+                                # might be a security risk \/
+                                export GIT_SSL_NO_VERIFY=1 
+
                                 for retry in {1..5}; do
                                     git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git \
                                     && ERR=false && break
