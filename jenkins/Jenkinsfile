@@ -73,10 +73,10 @@ pipeline {
                 post {
                     failure {
                         echo "# testing locally"
-                        echo "docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/$IMAGE"
+                        echo "docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/${IMAGE}"
                         echo "# in image:"
                         echo "cd tmp"
-                        echo "git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git"
+                        echo "git clone -b ${params.BRANCH} --single-branch --depth 1 https://github.com/root-project/root.git"
                         echo "mkdir build install"
                         echo "cmake ./root -DCMAKE_INSTALL_PREFIX=./install $OPTIONS"
                         echo "cmake --build . --target install -- -j$(nproc)"
