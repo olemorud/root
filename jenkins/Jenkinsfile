@@ -20,7 +20,7 @@ pipeline {
                 axes {
                     axis {
                         name 'IMAGE'
-                        values 'ghcr.io/olemorud/ubuntu:buildready', 'ghcr.io/olemorud/centos7:buildready', 'ghcr.io/olemorud/centos8:buildready'
+                        values 'ghcr.io/olemorud/ubuntu:buildready', 'ghcr.io/olemorud/centos7:buildready', 'ghcr.io/olemorud/centos8:buildready',  'ghcr.io/olemorud/fedora34:buildready'
                     }
                 }
                 stages {
@@ -65,7 +65,6 @@ pipeline {
                                 cmake /tmp/root/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
 
                                 cmake --build . --target install -- -j$(nproc)
-                                rm -rf /tmp/build /tmp/root
                             '''
                         }
                     }
