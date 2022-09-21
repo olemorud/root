@@ -20,14 +20,14 @@ pipeline {
                 axes {
                     axis {
                         name 'IMAGE'
-                        values 'ghcr.io/olemorud/ubuntu:buildready', 'ghcr.io/olemorud/centos7:buildready', 'ghcr.io/olemorud/centos8:buildready',  'ghcr.io/olemorud/fedora34:buildready'
+                        values 'ubuntu18', 'ubuntu20', 'ubuntu22', 'centos7', 'centos8',  'fedora34'
                     }
                 }
                 stages {
                     stage('Build') {
                         agent {
                             docker {
-                                image "${IMAGE}"
+                                image "ghcr.io/olemorud/${IMAGE}:buildready"
                                 args '''
                                     --net=host
                                     --pull=always
