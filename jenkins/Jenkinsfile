@@ -42,7 +42,6 @@ pipeline {
                             
                             sh '''
                                 # DEBUGGING
-                                ls /cvmfs
                                 env
                                 date
                             
