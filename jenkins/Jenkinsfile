@@ -20,7 +20,7 @@ pipeline {
                 axes {
                     axis {
                         name 'IMAGE'
-                        values 'ubuntu18', 'ubuntu20', 'ubuntu22', 'centos7', 'centos8',  'fedora34'
+                        values 'ubuntu18', 'ubuntu20', 'ubuntu22', 'centos7', 'centos8',  'fedora34', 'fedora32'
                     }
                 }
                 stages {
@@ -34,7 +34,6 @@ pipeline {
                                     -u=root
                                     -e BRANCH=${params.BRANCH}
                                     -e IMAGE=${IMAGE}
-                                    --volume /cvmfs:/cvmfs:shared    
                                 '''
                                 reuseNode true
                             }
@@ -50,8 +49,8 @@ pipeline {
                                 # BUILD
                                 cd /tmp/
 
-                                # might be a security risk but no code from the git is executed
-                                export GIT_SSL_NO_VERIFY=1 
+                                # possibly security risk but can solve git problems
+                                # export GIT_SSL_NO_VERIFY=1 
 
                                 for retry in {1..5}; do
                                     git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git \
@@ -72,13 +71,13 @@ pipeline {
                 post {
                     failure {
                         echo "# testing locally"
-                        echo "docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/${IMAGE}"
-                        echo "# in image:"
-                        echo "cd tmp"
-                        echo "git clone -b ${params.BRANCH} --single-branch --depth 1 https://github.com/root-project/root.git"
-                        echo "mkdir build install"
-                        echo "cmake ./root -DCMAKE_INSTALL_PREFIX=./install \$OPTIONS"
-                        echo "cmake --build . --target install -- -j\$(nproc)"
+                           + "docker run --rm -it --volume /cvmfs/cvmfs:shared ghcr.io/olemorud/${IMAGE}"
+                           + "# in image:"
+                           + "cd tmp"
+                           + "git clone -b ${params.BRANCH} --single-branch --depth 1 https://github.com/root-project/root.git"
+                           + "mkdir build install"
+                           + "cmake ./root -DCMAKE_INSTALL_PREFIX=./install \$OPTIONS"
+                           + "cmake --build . --target install -- -j\$(nproc)"
                     }
                 }
             }
