@@ -21,14 +21,13 @@ pipeline {
                         --pull=always
                         -u=root
                         -e BRANCH=${params.BRANCH}
-                        -e IMAGE=${IMAGE}
+                        -e IMAGE=${params.IMAGE}
                         -e OPTIONS=${params.BUILD_OPTIONS}
                     '''
                     reuseNode true
                 }
             }
             steps {
-                
                 sh '''
                     # DEBUGGING
                     env
