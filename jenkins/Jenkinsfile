@@ -7,7 +7,7 @@ pipeline {
 
     parameters{
         string(name: 'BRANCH', defaultValue: 'master', description: 'The branch of root to build')
-        string(name: 'BUILD_OPTIONS', defaultValue: '', description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17')
+        //string(name: 'BUILD_OPTIONS', defaultValue: '', description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17')
         string(name: 'IMAGE', defaultValue: 'ubuntu22', description: 'The image to build, available images are here: https://github.com/olemorud/root-build-ready')
     }
 
@@ -21,8 +21,6 @@ pipeline {
                         --pull=always
                         -u=root
                         -e BRANCH=${params.BRANCH}
-                        -e IMAGE=${params.IMAGE}
-                        -e OPTIONS=${params.BUILD_OPTIONS}
                     '''
                     reuseNode true
                 }
