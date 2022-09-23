@@ -12,63 +12,48 @@ pipeline {
     }
 
     stages {
-        stage('Build all images') {
+        stage('Build') {
             agent {
-                node {
-                    label 'docker-host-noafs'
+                docker {
+                    image "ghcr.io/olemorud/${params.IMAGE}:buildready"
+                    args '''
+                        --net=host
+                        --pull=always
+                        -u=root
+                        -e BRANCH=${params.BRANCH}
+                        -e IMAGE=${IMAGE}
+                        -e OPTIONS=${params.BUILD_OPTIONS}
+                    '''
+                    reuseNode true
                 }
             }
-            stages {
-                stage('Build') {
-                    agent {
-                        docker {
-                            image "ghcr.io/olemorud/${params.IMAGE}:buildready"
-                            args '''
-                                --net=host
-                                --pull=always
-                                -u=root
-                                -e BRANCH=${params.BRANCH}
-                                -e IMAGE=${IMAGE}
-                                -e OPTIONS=${params.BUILD_OPTIONS}
-                            '''
-                            reuseNode true
-                        }
-                    }
-                    steps {
-                        
-                        sh '''
-                            # DEBUGGING
-                            env
-                            date
-                        
-                            # BUILD
-                            cd /tmp/
+            steps {
+                
+                sh '''
+                    # DEBUGGING
+                    env
+                    date
+                
+                    # BUILD
+                    cd /tmp/
 
-                            # possibly security risk but can solve git problems
-                            # export GIT_SSL_NO_VERIFY=1 
+                    # possibly security risk but can solve git problems
+                    # export GIT_SSL_NO_VERIFY=1 
 
-                            for retry in {1..5}; do
-                                git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git \
-                                && ERR=false && break
-                            done
+                    for retry in {1..5}; do
+                        git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git \
+                        && ERR=false && break
+                    done
 
-                            mkdir -p /tmp/build
-                            cd /tmp/build
+                    mkdir -p /tmp/build
+                    cd /tmp/build
 
-                            # For ROOT version 6.26.00 set `-Druntime_cxxmodules=OFF` (https://github.com/root-project/root/pull/10198)
-                            cmake /tmp/root/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
+                    # For ROOT version 6.26.00 set `-Druntime_cxxmodules=OFF` (https://github.com/root-project/root/pull/10198)
+                    cmake /tmp/root/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
 
-                            cmake --build . --target install -- -j$(nproc)
-                        '''
-                    }
-                }
-                post {
-                    failure {
-                        echo "TODO: show how to replicate build on failure"
-                    }
-                }
+                    cmake --build . --target install -- -j$(nproc)
+                '''
             }
         }
     }
-
 }
