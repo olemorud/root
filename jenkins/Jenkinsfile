@@ -12,6 +12,13 @@ pipeline {
     }
 
     stages {
+        stage('Set display name'){
+            steps {
+                script {
+                    currentBuild.displayName = "${IMAGE}-${BRANCH}"
+                }
+            }
+        }
         stage('Build') {
             agent {
                 docker {
