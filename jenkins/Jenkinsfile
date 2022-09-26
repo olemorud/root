@@ -60,9 +60,12 @@ pipeline {
             }
             post {
                 failure {
-                    node(null) {
-                        mattermostSend color: 'warning', endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e', message: "Build failed - Branch ${BRANCH} on platform ${IMAGE}"
-                    }
+                    mattermostSend (
+                        endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
+                        color: 'good',
+                        message: 'msg',
+                        text: "Build failed - Branch ${BRANCH} on platform ${IMAGE}"
+                    )
                 }
             }
         }
