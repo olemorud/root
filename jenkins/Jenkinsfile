@@ -6,9 +6,21 @@ pipeline {
     }
 
     parameters{
-        string(name: 'BRANCH', defaultValue: 'master', description: 'The branch of root to build')
-        //string(name: 'BUILD_OPTIONS', defaultValue: '', description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17')
-        string(name: 'IMAGE', defaultValue: 'ubuntu22', description: 'The image to build, available images are here: https://github.com/olemorud/root-build-ready')
+        string(
+			name: 'BRANCH',
+			defaultValue: 'master',
+			description: 'The branch of root to build'
+		)
+        string(
+			name: 'IMAGE', 
+			defaultValue: 'ubuntu22', 
+			description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
+		)
+        //string(
+		//	name: 'BUILD_OPTIONS', 
+		//	defaultValue: '', 
+		//	description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17'
+		//)
     }
 
     stages {
@@ -33,7 +45,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'bash ./jenkins/build.sh'
+                sh 'bash ./jenkins/installroot.sh'
             }
             post {
                 failure {
