@@ -68,7 +68,7 @@ pipeline {
                 echo currentBuild.result
             }
             post { failure {
-                msgMattermostFail(BRANCH, PLATFORM)
+                notifyFail(BRANCH, PLATFORM)
             }}
         }
 
@@ -88,7 +88,7 @@ pipeline {
                 echo currentBuild.result
             }
             post { failure {
-                msgMattermostFail(BRANCH, PLATFORM)
+                notifyFail(BRANCH, PLATFORM)
             }}
         }
 
@@ -108,13 +108,13 @@ pipeline {
                 echo currentBuild.result
             }
             post { failure {
-                msgMattermostFail(BRANCH, PLATFORM)
+                notifyFail(BRANCH, PLATFORM)
             }}
         }
     }
 }
 
-def msgMattermostFail(BRANCH, PLATFORM){
+def notifyFail(BRANCH, PLATFORM){
     mattermostSend (
         channel: '#jenkins-notification-test',
         endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
