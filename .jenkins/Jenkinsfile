@@ -11,9 +11,7 @@
 
 pipeline {
     agent {
-        node {
-            label 'docker-host-noafs'
-        }
+        label 'master'
     }
 
     parameters{
@@ -54,6 +52,7 @@ pipeline {
 				}
 			}
             agent {
+				label 'docker-host-noafs'
                 docker {
                     image "ghcr.io/olemorud/${params.PLATFORM}:buildready"
                     args '''
