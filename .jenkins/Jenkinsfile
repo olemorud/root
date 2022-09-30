@@ -1,12 +1,12 @@
-/*	
-	Jenkins pipeline for building ROOT on a Docker image.
+/*
+    Jenkins pipeline for building ROOT on a Docker image.
 
-	The Docker images are pre-shipped with the needed dependencies, such as cmake.
+    The Docker images are pre-shipped with the needed dependencies, such as cmake.
 
-	This pipeline is (as of Sep 2022) used by a multi-config job to build ROOT on ~8
-	different platforms.
+    This pipeline is (as of Sep 2022) used by a multi-config job to build ROOT on ~8
+    different platforms.
 
-	maintainer: ole.kristian.morud@cern.ch
+    maintainer: ole.kristian.morud@cern.ch
 */
 
 pipeline {
@@ -14,20 +14,20 @@ pipeline {
 
     parameters{
         string(
-			name: 'BRANCH',
-			defaultValue: 'master',
-			description: 'The branch of root to build'
-		)
+            name: 'BRANCH',
+            defaultValue: 'master',
+            description: 'The branch of root to build'
+        )
         string(
-			name: 'PLATFORM', 
-			defaultValue: 'ubuntu22', 
-			description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
-		)
+            name: 'PLATFORM',
+            defaultValue: 'ubuntu22',
+            description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
+        )
         //string(
-		//	name: 'BUILD_OPTIONS', 
-		//	defaultValue: '', 
-		//	description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17'
-		//)
+        //    name: 'BUILD_OPTIONS',
+        //    defaultValue: '',
+        //    description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17'
+        //)
     }
 
     stages {
@@ -38,20 +38,20 @@ pipeline {
                 }
             }
         }
-		
-		/*
-			Runs when PLATFORM is not windows* or mac* 
-		*/
+
+        /*
+            Runs when PLATFORM is not windows* or mac*
+        */
         stage('Build on Linux in Docker') {
-			when { 
-				beforeAgent true
-				not { 
-					expression { PLATFORM ==~ /(windows.*|mac.*)/ }
-				}
-			}
+            when {
+                beforeAgent true
+                not {
+                    expression { PLATFORM ==~ /(windows.*|mac.*)/ }
+                }
+            }
             agent {
                 docker {
-					label 'docker-host-noafs'
+                    label 'docker-host-noafs'
                     image "ghcr.io/olemorud/${params.PLATFORM}:buildready"
                     args '''
                         --net=host
@@ -65,55 +65,55 @@ pipeline {
                 sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
             }
             post { failure {
-				msgMattermostFail(BRANCH, PLATFORM)
+                msgMattermostFail(BRANCH, PLATFORM)
             }}
         }
-		
-		/*
-			Runs when PLATFORM matches mac*
-		*/
-		stage('Build on Mac') {
-			when {
-				beforeAgent true
-				expression { PLATFORM ==~ /mac.*/ }
-			}
-			agent { 
-				label "${PLATFORM}"
-			}
-			steps {
-				sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
-			}
-			post { failure { 
-				msgMattermostFail(BRANCH, PLATFORM)
-			}}
-		}
 
-		/*
-			Runs when PLATFORM matches windows*
-		*/
-		stage('Build on Windows') {
-			when {
-				beforeAgent true
-				expression { PLATFORM ==~ /win.*/ }
-			}
-			agent {
-				label "${PLATFORM}"
-			}
-			steps {
-				sh './.jenkins/installroot.ps1'
-			}
-			post { failure { 
-				msgMattermostFail(BRANCH, PLATFORM)
-			}}
-		}
+        /*
+            Runs when PLATFORM matches mac*
+        */
+        stage('Build on Mac') {
+            when {
+                beforeAgent true
+                expression { PLATFORM ==~ /mac.*/ }
+            }
+            agent {
+                label "${PLATFORM}"
+            }
+            steps {
+                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+            }
+            post { failure {
+                msgMattermostFail(BRANCH, PLATFORM)
+            }}
+        }
+
+        /*
+            Runs when PLATFORM matches windows*
+        */
+        stage('Build on Windows') {
+            when {
+                beforeAgent true
+                expression { PLATFORM ==~ /win.*/ }
+            }
+            agent {
+                label "${PLATFORM}"
+            }
+            steps {
+                sh './.jenkins/installroot.ps1'
+            }
+            post { failure {
+                msgMattermostFail(BRANCH, PLATFORM)
+            }}
+        }
     }
 }
 
 def msgMattermostFail(BRANCH, PLATFORM){
-	mattermostSend (
-		channel: '#jenkins-notification-test',
-		endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
-		message: "Build failed - Branch \"${BRANCH}\" on platform \"${PLATFORM}\"",
-		icon: 'https://toppng.com/uploads/preview/butthead-acdc-11549475832jltej3r74n.png'
-	)
+    mattermostSend (
+        channel: '#jenkins-notification-test',
+        endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
+        message: "Build failed - Branch \"${BRANCH}\" on platform \"${PLATFORM}\"",
+        icon: 'https://toppng.com/uploads/preview/butthead-acdc-11549475832jltej3r74n.png'
+    )
 }
