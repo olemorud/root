@@ -3,7 +3,7 @@
 
     The Docker images are pre-shipped with the needed dependencies, such as cmake.
 
-    This pipeline is (as of Sep 2022) used by a multi-config job to build ROOT on ~8
+    This pipeline is (as of Sep 2022) used by a multi-config job to build ROOT on ~14
     different platforms.
 
     maintainer: ole.kristian.morud@cern.ch
