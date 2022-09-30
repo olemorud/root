@@ -1,3 +1,14 @@
+/*	
+	Jenkins pipeline for building ROOT on a Docker image.
+
+	The Docker images are pre-shipped with the needed dependencies, such as cmake.
+
+	This pipeline is (as of Sep 2022) used by a multi-config job to build ROOT on ~8
+	different platforms.
+
+	maintainer: ole.kristian.morud@cern.ch
+*/
+
 pipeline {
     agent {
         node {
@@ -12,7 +23,7 @@ pipeline {
 			description: 'The branch of root to build'
 		)
         string(
-			name: 'IMAGE', 
+			name: 'PLATFORM', 
 			defaultValue: 'ubuntu22', 
 			description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
 		)
@@ -27,14 +38,24 @@ pipeline {
         stage('Set display name'){
             steps {
                 script {
-                    currentBuild.displayName = "${IMAGE}-${BRANCH}"
+                    currentBuild.displayName = "${PLATFORM}-${BRANCH}"
                 }
             }
         }
-        stage('Build') {
+		
+		/*
+			Runs when PLATFORM is not windows* or mac* 
+		*/
+        stage('Build on Linux in Docker') {
+			when { 
+				beforeAgent true
+				not { 
+					expression { PLATFORM ==~ /(windows.*|mac.*)/ }
+				}
+			}
             agent {
                 docker {
-                    image "ghcr.io/olemorud/${params.IMAGE}:buildready"
+                    image "ghcr.io/olemorud/${params.PLATFORM}:buildready"
                     args '''
                         --net=host
                         --pull=always
@@ -47,17 +68,48 @@ pipeline {
             steps {
                 sh 'bash ./jenkins/installroot.sh'
             }
-            post {
-                failure {
-                    mattermostSend (
-                        channel: '#jenkins-notification-test',
-                        endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
-                        color: 'good',
-                        message: "Build failed - Branch \"${BRANCH}\" on platform \"${IMAGE}\"",
-                        icon: 'https://toppng.com/uploads/preview/butthead-acdc-11549475832jltej3r74n.png'
-                    )
-                }
-            }
+            post { failure {
+				msgMattermostFail(BRANCH, PLATFORM)
+            }}
         }
+		
+		/*
+			Runs when PLATFORM matches mac*
+		*/
+		stage('Build on Mac') {
+			when {
+				expression { PLATFORM ==~ /(mac.*)/}
+			}
+			steps {
+				sh './jenkins/installroot.sh'
+			}
+			post { failure { 
+				msgMattermostFail(BRANCH, PLATFORM)
+			}}
+		}
+
+		/*
+			Runs when PLATFORM matches windows*
+		*/
+		stage('Build on Windows') {
+			when {
+				expression { PLATFORM ==~ /(win.*)/}
+			}
+			steps {
+				sh './jenkins/installroot.ps1'
+			}
+			post { failure { 
+				msgMattermostFail(BRANCH, PLATFORM)
+			}}
+		}
     }
+}
+
+def msgMattermostFail(BRANCH, PLATFORM){
+	mattermostSend (
+		channel: '#jenkins-notification-test',
+		endpoint: 'https://mattermost.web.cern.ch/hooks/x9pg89zxw78oikemnw5huafn7e',
+		message: "Build failed - Branch \"${BRANCH}\" on platform \"${PLATFORM}\"",
+		icon: 'https://toppng.com/uploads/preview/butthead-acdc-11549475832jltej3r74n.png'
+	)
 }
