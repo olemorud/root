@@ -80,9 +80,7 @@ pipeline {
                 beforeAgent true
                 expression { PLATFORM ==~ /mac.*/ }
             }
-            agent {
-                label "${PLATFORM}"
-            }
+            agent { label "${PLATFORM}" }
             steps {
                 catchError {
                     sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
@@ -102,9 +100,7 @@ pipeline {
                 beforeAgent true
                 expression { PLATFORM ==~ /win.*/ }
             }
-            agent {
-                label "${PLATFORM}"
-            }
+            agent { label "${PLATFORM}" }
             steps {
                 catchError {
                     sh './.jenkins/installroot.ps1'
