@@ -52,8 +52,8 @@ pipeline {
 				}
 			}
             agent {
-				label 'docker-host-noafs'
                 docker {
+					label 'docker-host-noafs'
                     image "ghcr.io/olemorud/${params.PLATFORM}:buildready"
                     args '''
                         --net=host
@@ -61,7 +61,6 @@ pipeline {
                         -u=root
                         -e BRANCH=${params.BRANCH}
                     '''
-                    reuseNode true
                 }
             }
             steps {
