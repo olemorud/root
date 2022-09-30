@@ -64,7 +64,7 @@ pipeline {
                 }
             }
             steps {
-                sh 'bash ./.jenkins/installroot.sh'
+                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
             }
             post { failure {
 				msgMattermostFail(BRANCH, PLATFORM)
@@ -76,7 +76,8 @@ pipeline {
 		*/
 		stage('Build on Mac') {
 			when {
-				expression { PLATFORM ==~ /(mac.*)/}
+				beforeAgent true
+				expression { PLATFORM ==~ /mac.*/ }
 			}
 			agent { 
 				label "${PLATFORM}"
@@ -94,7 +95,8 @@ pipeline {
 		*/
 		stage('Build on Windows') {
 			when {
-				expression { PLATFORM ==~ /(win.*)/}
+				beforeAgent true
+				expression { PLATFORM ==~ /win.*/ }
 			}
 			agent {
 				label "${PLATFORM}"
