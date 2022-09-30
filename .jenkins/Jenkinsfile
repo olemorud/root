@@ -10,9 +10,7 @@
 */
 
 pipeline {
-    agent {
-        label 'master'
-    }
+    agent none
 
     parameters{
         string(
