@@ -10,8 +10,6 @@ installroot.ps1  -Generator        <Generator> `
 				 -Workdir          <Path>
 #>
 
-Push-Location
-
 param(
     [string]$Branch = "latest-stable", # The github branch of ROOT to build
     [string]$Config = "Release",       # Debug, MinSizeRel, Optimized, Release, RelWithDebInfo
@@ -29,6 +27,7 @@ if ($Generator) {
 	$CMakeParams += "-G`"$Generator`""
 }
 
+Push-Location
 
 if(Test-Path -Path "$Workdir/source") {
     Remove-Item -Recurse -Force "$Workdir/source"
