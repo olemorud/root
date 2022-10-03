@@ -1,6 +1,5 @@
 #!/usr/bin/zsh
 
-# author: Ole Morud, ole.kristian.morud@cern.ch
 
 source rc.sh
 
