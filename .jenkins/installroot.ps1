@@ -2,12 +2,13 @@
 #
 # maintainer: Ole Morud ole.kristian.morud@cern.ch
 #
-# Usage:
-#     installroot.ps1 -Generator        <Generator> `
-#                     -TargetArch       [ARM|ARM64|Win32|x64] `
-#                     -Config           [Debug, MinSizeRel, Optimized, Release, RelWithDebInfo] `
-#                     -ToolchainVersion [x64|Win32]
-#                      -Workdir            <Path>
+<# Usage (All parameters are optional, see below for default values):
+installroot.ps1  -Generator        <Generator> `
+				 -TargetArch       [ARM|ARM64|Win32|x64] `
+				 -Config           [Debug, MinSizeRel, Optimized, Release, RelWithDebInfo] `
+				 -ToolchainVersion [x64|Win32] `
+				 -Workdir          <Path>
+#>
 
 param(
     [string]$Generator = "Visual Studio 17 2022",       # The Generator used to build ROOT, `cmake --help` lists available generators
