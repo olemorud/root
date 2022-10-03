@@ -26,4 +26,4 @@ cmake --build . --target install -- -j$(nproc)
 ARCHIVENAME="build-$IMAGE-$BRANCH-$(uname -m).tar.gz"
 
 tar -czf "$ARCHIVENAME" /tmp/build/*
-./uploadartifacts/upload.sh "$ARCHIVENAME"
+./.jenkins/uploadartifacts/upload.sh "$ARCHIVENAME"
