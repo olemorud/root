@@ -1,6 +1,5 @@
 #!/bin/zsh
 
-# author: Ole Morud, ole.kristian.morud@cern.ch
 
 if test $# -eq 0; then
   echo "Usage: $0 <file>"
