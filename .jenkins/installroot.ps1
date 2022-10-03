@@ -35,9 +35,9 @@ git clone --branch latest-stable --depth=1 https://github.com/root-project/root.
 # -Force does not overwrite directories but supresses warnings
 New-Item -ItemType Directory -Force -Path "$Workdir/build"
 New-Item -ItemType Directory -Force -Path "$Workdir/install"
-cd "$Workdir/build"
+Set-Location "$Workdir/build"
 
-echo "cmake $CMakeParams `"$Workdir/source/`""
+Write-Host "cmake $CMakeParams `"$Workdir/source/`""
 cmake @CMakeParams "$Workdir/source/"
 cmake --build "$Workdir/build" --config "$Config" --target install
 
