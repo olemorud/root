@@ -18,3 +18,11 @@ cd /tmp/build
 cmake /tmp/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
 
 cmake --build . --target install -- -j$(nproc)
+
+
+
+# Upload build artifacts to S3
+ARCHIVENAME="build-$IMAGE-$BRANCH-$(uname -m).tar.gz"
+
+tar -czf "$ARCHIVENAME" /tmp/build/*
+./uploadartifacts/upload.sh "$ARCHIVENAME"
