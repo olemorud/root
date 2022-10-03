@@ -1,11 +1,12 @@
 #!/bin/bash
 
-# DEBUGGING
+# Print debugging info
 env
 date
 
-# BUILD
 
+
+# Clone, setup and build
 for retry in {1..5}; do
     git clone -b $BRANCH --single-branch --depth 1 https://github.com/root-project/root.git /tmp/src \
     && ERR=false && break
