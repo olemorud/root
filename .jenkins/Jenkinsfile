@@ -62,10 +62,7 @@ pipeline {
                 }
             }
             steps {
-                catchError {
-                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
-                }
-                echo currentBuild.result
+                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
@@ -82,10 +79,7 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-                catchError {
-                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
-                }
-                echo currentBuild.result
+                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
@@ -102,10 +96,7 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-                catchError {
-                    sh './.jenkins/installroot.ps1'
-                }
-                echo currentBuild.result
+                sh './.jenkins/installroot.ps1'
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
