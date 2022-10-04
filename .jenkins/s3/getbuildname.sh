@@ -1,4 +1,4 @@
 #!/bin/bash
 
-echo "build-$IMAGE-$BRANCH-$(uname -m).tar.gz"
+echo "$PLATFORM-$BRANCH-$(uname -m).tar.gz"
 
