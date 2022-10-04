@@ -4,7 +4,7 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-source $SCRIPT_DIR/rc.sh
+source "$SCRIPT_DIR/rc.sh"
 
 # auth token is only printed in verbose output
 curl --verbose \

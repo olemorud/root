@@ -8,7 +8,7 @@ fi
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 FILENAME=$1
 URL=https://s3.cern.ch/swift/v1/ROOT-build-artifacts
-TOKEN=$($SCRIPT_DIR/auth.sh)
+TOKEN=$("$SCRIPT_DIR/auth.sh")
 
 echo "curl -i \"$URL/$FILENAME\" -X GET -H \"X-Auth-Token: $TOKEN\""
 

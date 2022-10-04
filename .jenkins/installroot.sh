@@ -1,17 +1,20 @@
 #!/bin/bash
 
 
+SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
+
 # Print debugging info
 env
 date
+pwd
+echo $SCRIPT_DIR
+echo $ARCHIVE_NAME
 
-
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-ARCHIVE_NAME=$($SCRIPT_DIR/s3/getbuildname.sh)
 
 
 # Download and unpack previous build artifacts from S3
-$SCRIPT_DIR/s3/download.sh $ARCHIVE_NAME
+"$SCRIPT_DIR/s3/download.sh" $ARCHIVE_NAME
 
 mkdir -p /tmp/build
 if [ -f $ARCHIVE_NAME ]; then
