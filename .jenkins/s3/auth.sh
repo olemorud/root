@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# this prorgam prints s3 token to stdout
+# this program prints s3 token to stdout
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 

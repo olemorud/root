@@ -24,13 +24,16 @@ failmsglen=$(echo "$failmsg" | wc -c)
 if [ "$(head -c $failmsglen "$ARCHIVE_NAME")" = $failmsg ]; then
 	INCREMENTAL=false
 else
-	tar -xvf "$ARCHIVE_NAME" -C / || INCREMENTAL=false
+	if ! tar -xvf "$ARCHIVE_NAME" -C /; then
+        INCREMENTAL=false
+    fi
 fi
 
 mkdir -p /tmp/root/build
+mkdir -p /tmp/root/install
 
 
-# Clone, setup and build
+# Clone, generate and build
 for retry in {1..5}; do
     git clone -b "$BRANCH" \
               --single-branch \
@@ -42,7 +45,7 @@ done
 cd /tmp/root/build || exit 1
 
 if [ "$INCREMENTAL" = false ]; then
-	cmake /tmp/root/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS || exit 1
+	cmake /tmp/root/src/ -DCMAKE_INSTALL_PREFIX=/tmp/root/install $OPTIONS || exit 1
 fi
 
 cmake --build . --target install -- -j$(nproc) || exit 1
