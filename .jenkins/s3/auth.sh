@@ -12,5 +12,5 @@ curl --verbose \
 	 -X POST "$OS_AUTH_URL/auth/tokens?nocatalog" \
 	 -H "Content-Type: application/json" \
 	 -d '{"auth": {"identity": {"methods": ["application_credential"],"application_credential": {"id": "'"$OS_APPLICATION_CREDENTIAL_ID"'","secret": "'"$OS_APPLICATION_CREDENTIAL_SECRET"'"}}}}' \
-	2> /dev/stdout | grep X-Subject-Token: | cut -d" " -z -f3 | tr -d "\r\n\0 "
+	2>/dev/stdout | grep X-Subject-Token: | cut -d" " -z -f3 | tr -d "\r\n\0 "
 

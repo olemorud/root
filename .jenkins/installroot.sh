@@ -14,9 +14,13 @@ pwd
 # Download and unpack previous build artifacts from S3
 "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
-mkdir -p /tmp/build
-tar -xvf "$ARCHIVE_NAME" -C / && INCREMENTAL=false
-echo "INCREMENTAL=$INCREMENTAL"
+if [ "$(cat "$ARCHIVE_NAME")" = "NoSuchKey" ]; then
+	mkdir -p /tmp/build
+	INCREMENTAL=false
+else
+	tar -xvf "$ARCHIVE_NAME" -C / && INCREMENTAL=false
+fi
+
 
 
 # Clone, setup and build

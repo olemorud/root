@@ -16,4 +16,4 @@ curl \
 	"$URL/$FILENAME" \
 	-X GET \
 	-H "X-Auth-Token: $TOKEN" \
-	--output $FILENAME
+	--output "$FILENAME"
