@@ -62,7 +62,11 @@ pipeline {
                 }
             }
             steps {
-                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+			    withCredentials(
+                    [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
+                ) {
+                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+                }
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
@@ -79,7 +83,11 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-                sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+			    withCredentials(
+                    [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
+                ) {
+                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+                }
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
@@ -96,7 +104,11 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-                sh './.jenkins/installroot.ps1'
+			    withCredentials(
+                    [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
+                ) {
+                    sh './.jenkins/installroot.ps1'
+                }
             }
             post { failure {
                 notifyFail(BRANCH, PLATFORM)
