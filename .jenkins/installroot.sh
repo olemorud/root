@@ -18,7 +18,10 @@ pwd
 # Download and unpack previous build artifacts from S3
 "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
-if [ "$(cat "$ARCHIVE_NAME")" = "NoSuchKey" ]; then
+# if first few bytes of file is 'NoSuchKey', skip incremental build
+failmsg='NoSuchKey'
+failmsglen=$(wc -c failmsg)
+if [ "$(head -c $failmsglen "$ARCHIVE_NAME")" = $failmsg ]; then
 	mkdir -p /tmp/build
 	INCREMENTAL=false
 else
