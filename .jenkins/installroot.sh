@@ -15,11 +15,8 @@ pwd
 "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
 mkdir -p /tmp/build
-# as of now this test always succeeds but the tar command displays a warning if the file
-# isnt available on s3
-if [ -f "$ARCHIVE_NAME" ]; then
-    tar -xvf "$ARCHIVE_NAME" -C /
-fi
+tar -xvf "$ARCHIVE_NAME" -C / && INCREMENTAL=false
+echo "INCREMENTAL=$INCREMENTAL"
 
 
 # Clone, setup and build
@@ -34,12 +31,14 @@ done
 cd /tmp/build || exit 1
 
 # for ROOT version 6.26.00 set `-Druntime_cxxmodules=OFF` (https://github.com/root-project/root/pull/10198)
-cmake /tmp/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
+if [ "$INCREMENTAL" = false ]; then
+	cmake /tmp/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
+fi
 
 cmake --build . --target install -- -j$(nproc)
 
 
 
-# Upload build artifacts to S3
+# Archive and upload build artifacts to S3
 tar -Pczf "$ARCHIVE_NAME" /tmp/build/*
 "$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"
