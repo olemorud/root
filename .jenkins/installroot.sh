@@ -1,14 +1,18 @@
 #!/bin/bash
 
 
+# Setup environment
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
+
+
 
 # Print debugging info, enable tracing
 set -o xtrace
 env
 date
 pwd
+
 
 
 # Download and unpack previous build artifacts from S3
@@ -18,7 +22,7 @@ if [ "$(cat "$ARCHIVE_NAME")" = "NoSuchKey" ]; then
 	mkdir -p /tmp/build
 	INCREMENTAL=false
 else
-	tar -xvf "$ARCHIVE_NAME" -C / && INCREMENTAL=false
+	tar -xvf "$ARCHIVE_NAME" -C / || INCREMENTAL=false
 fi
 
 
@@ -34,12 +38,11 @@ done
 
 cd /tmp/build || exit 1
 
-# for ROOT version 6.26.00 set `-Druntime_cxxmodules=OFF` (https://github.com/root-project/root/pull/10198)
 if [ "$INCREMENTAL" = false ]; then
-	cmake /tmp/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS
+	cmake /tmp/src/ -DCMAKE_INSTALL_PREFIX=/usr $OPTIONS || exit 1
 fi
 
-cmake --build . --target install -- -j$(nproc)
+cmake --build . --target install -- -j$(nproc) || exit 1
 
 
 
