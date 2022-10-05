@@ -49,7 +49,7 @@ mkdir -p /tmp/root/install
 cd /tmp/root/build || exit 1
 
 if [ "$INCREMENTAL" = false ]; then
-    cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/ || exit 1 # $OPTIONS
+    cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install -Dccache=ON /tmp/root/src/ || exit 1 # $OPTIONS
 fi
 
 cmake --build /tmp/root/build --target install -- -j$(nproc) || exit 1
