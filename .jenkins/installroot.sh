@@ -21,44 +21,35 @@ if [ "$INCREMENTAL" = true ]; then
     cd $ARCHIVE_DIR || exit 1
     "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
-    # if first few bytes of file is 'NoSuchKey', skip incremental build
-    failmsg='NoSuchKey'
-    failmsglen=${#failmsg}
-    if [ "$(head -c "$failmsglen" "$ARCHIVE_NAME")" = $failmsg ]; then
+    if ! tar -xvf "$ARCHIVE_NAME" -C /; then
         INCREMENTAL=false
-    else
-        if ! tar -xvf "$ARCHIVE_NAME" -C /; then
-            INCREMENTAL=false
-        fi
     fi
-else
-    mkdir -p /tmp/root/build
-    mkdir -p /tmp/root/install
 fi
 
+if [ "$INCREMENTAL" = false ]; then
+    # Make needed dirs only if last step didn't run / failed
+    # (we don't want to update timestamps)
+    mkdir -p /tmp/root/build
+    mkdir -p /tmp/root/install
 
-
-# Clone, generate and build
-for retry in {1..5}; do
     git clone -b "$BRANCH" \
-              --single-branch \
-              --depth 1 \
-              https://github.com/root-project/root.git /tmp/root/src \
-    && ERR=false && break
-done
+                --single-branch \
+                --depth 1 \
+                https://github.com/root-project/root.git /tmp/root/src
+else
+    cd /tmp/root/src    || exit 1
+    git pull            || exit 1
+fi
 
 cd /tmp/root/build || exit 1
 
-#if [ "$INCREMENTAL" = false ]; then
 cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install -Dccache=ON /tmp/root/src/ || exit 1 # $OPTIONS
-#fi
-
-cmake --build /tmp/root/build --target install -- -j$(nproc) || exit 1
+cmake --build /tmp/root/build --target install -- -j"$(nproc)" || exit 1
 
 
 
 # Archive and upload build artifacts to S3
 cd $ARCHIVE_DIR || exit 1
 rm -f "$ARCHIVE_NAME"
-tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ $HOME/.cache/ccache
+tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/ "$HOME/.cache/ccache/"
 "$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"
