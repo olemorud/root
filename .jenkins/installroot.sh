@@ -31,6 +31,9 @@ if [ "$INCREMENTAL" = true ]; then
             INCREMENTAL=false
         fi
     fi
+else
+    mkdir -p /tmp/root/build
+    mkdir -p /tmp/root/install
 fi
 
 
@@ -44,8 +47,6 @@ for retry in {1..5}; do
     && ERR=false && break
 done
 
-mkdir -p /tmp/root/build
-mkdir -p /tmp/root/install
 cd /tmp/root/build || exit 1
 
 #if [ "$INCREMENTAL" = false ]; then
