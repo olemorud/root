@@ -45,6 +45,7 @@ if(Test-Path $Workdir/$ArchiveName -PathType Leaf){
     Set-Location "$Workdir/source"
     git pull
 } else {
+	Set-Location "$Workdir"
     git clone --branch $Branch `
               --depth=1 `
               "https://github.com/root-project/root.git" `
