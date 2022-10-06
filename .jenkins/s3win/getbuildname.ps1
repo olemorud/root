@@ -1,0 +1,3 @@
+
+return "$PLATFORM-$BRANCH-$env:PROCESSOR_ARCHITECTURE.zip"
+
