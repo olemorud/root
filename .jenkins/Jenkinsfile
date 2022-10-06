@@ -112,7 +112,7 @@ pipeline {
 			    withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
-                    sh './.jenkins/installroot.ps1'
+                    powershell './.jenkins/installroot.ps1'
                 }
             }
             post { failure {
