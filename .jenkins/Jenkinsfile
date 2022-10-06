@@ -23,6 +23,11 @@ pipeline {
             defaultValue: 'ubuntu22',
             description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
         )
+        booleanParam(
+            name: 'INCREMENTAL',
+            defaultValue: true,
+            description: 'Use previous build artifacts to speed up build'
+        )
         //string(
         //    name: 'BUILD_OPTIONS',
         //    defaultValue: '',
