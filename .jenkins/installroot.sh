@@ -31,6 +31,7 @@ if [ "$INCREMENTAL" = false ]; then
     # (we don't want to update timestamps)
     mkdir -p /tmp/root/build
     mkdir -p /tmp/root/install
+    rm -rf /tmp/root/src
 
     git clone -b "$BRANCH" \
                 --single-branch \
