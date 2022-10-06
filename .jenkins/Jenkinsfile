@@ -45,13 +45,13 @@ pipeline {
         }
 
         /*
-            Runs when PLATFORM is not windows* or mac*
+            Runs when PLATFORM is not *win* or mac*
         */
         stage('Build on Linux in Docker') {
             when {
                 beforeAgent true
                 not {
-                    expression { PLATFORM ==~ /(windows.*|mac.*)/ }
+                    expression { PLATFORM ==~ /(.*win.*|mac.*)/ }
                 }
             }
             agent {
@@ -100,12 +100,12 @@ pipeline {
         }
 
         /*
-            Runs when PLATFORM matches windows*
+            Runs when PLATFORM matches *win*
         */
         stage('Build on Windows') {
             when {
                 beforeAgent true
-                expression { PLATFORM ==~ /win.*/ }
+                expression { PLATFORM ==~ /.*win.*/ }
             }
             agent { label "${PLATFORM}" }
             steps {
