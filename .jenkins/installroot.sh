@@ -4,7 +4,7 @@
 # Setup environment
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
-ARCHIVE_DIR="/"
+ARCHIVE_DIR="$HOME/rootci"
 
 
 
