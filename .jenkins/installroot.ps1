@@ -32,7 +32,6 @@ if ($Generator) {
 
 Push-Location
 
-
 if(Test-Path $Workdir){
     Remove-Item $Workdir/* -Recurse -Force
 } else {
@@ -43,13 +42,13 @@ Set-Location $Workdir
 $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
 & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
 
-if(Test-Path $Workdir/$ArchiveName -PathType Leaf){
+try {
     Expand-Archive -Path "$ArchiveName" `
                    -DestinationPath "$Workdir" `
                    -Force
     Set-Location "$Workdir/source"
     git pull
-} else {
+} catch {
     Set-Location "$Workdir"
     git clone --branch $Branch `
               --depth=1 `
