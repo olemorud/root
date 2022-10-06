@@ -23,7 +23,7 @@ param(
 )
 $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
-    "-A `"$TargetArch`"",
+    "-A`"$TargetArch`"",
     "-Thost=`"$ToolchainVersion`""
 )
 if ($Generator) {
@@ -33,10 +33,15 @@ if ($Generator) {
 Push-Location
 
 
-Remove-Item $Workdir/* -Recurse -Force 
+if(Test-Path $Workdir){
+    Remove-Item $Workdir/* -Recurse -Force
+} else {
+    New-Item -ItemType Directory -Force -Path "$Workdir"
+}
 
-$ArchiveName = & "$PSScriptRoot/getbuildname.ps1"
-& "$PSScriptRoot/download.ps1 $ArchiveName"
+Set-Location $Workdir
+$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
 
 if(Test-Path $Workdir/$ArchiveName -PathType Leaf){
     Expand-Archive -Path "$ArchiveName" `
@@ -45,7 +50,7 @@ if(Test-Path $Workdir/$ArchiveName -PathType Leaf){
     Set-Location "$Workdir/source"
     git pull
 } else {
-	Set-Location "$Workdir"
+    Set-Location "$Workdir"
     git clone --branch $Branch `
               --depth=1 `
               "https://github.com/root-project/root.git" `
