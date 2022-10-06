@@ -43,7 +43,7 @@ fi
 
 cd /tmp/root/build || exit 1
 
-cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install -Dccache=ON /tmp/root/src/ || exit 1 # $OPTIONS
+cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
 cmake --build /tmp/root/build --target install -- -j"$(nproc)" || exit 1
 
 
@@ -51,5 +51,5 @@ cmake --build /tmp/root/build --target install -- -j"$(nproc)" || exit 1
 # Archive and upload build artifacts to S3
 cd $ARCHIVE_DIR || exit 1
 rm -f "$ARCHIVE_NAME"
-tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/ "$HOME/.cache/ccache/"
+tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
 "$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"
