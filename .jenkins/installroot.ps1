@@ -38,11 +38,11 @@ if(Test-Path $Workdir){
     New-Item -ItemType Directory -Force -Path "$Workdir"
 }
 
-Set-Location $Workdir
-$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
-& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
 
 try {
+    Set-Location $Workdir
+    $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+    & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     Expand-Archive -Path "$ArchiveName" `
                    -DestinationPath "$Workdir" `
                    -Force
