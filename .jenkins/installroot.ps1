@@ -19,7 +19,8 @@ param(
     [string]$Generator = "",           # The Generator used to build ROOT, `cmake --help` lists available generators
     [string]$TargetArch = "x64",       # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
-    [string]$Workdir = "$HOME/ROOT"    # Where to download, setup and install ROOT
+    [string]$Workdir = "$HOME/ROOT",   # Where to download, setup and install ROOT
+    [bool]$StubCMake = 1
 )
 $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
@@ -76,6 +77,15 @@ $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if($INCREMENTAL){
+    Write-Host @"
+& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+Expand-Archive -Path "$ArchiveName" `
+               -DestinationPath "$Workdir" `
+               -Force
+Set-Location "$Workdir/source"
+git pull
+"@
+
     & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     Expand-Archive -Path "$ArchiveName" `
                    -DestinationPath "$Workdir" `
@@ -83,6 +93,16 @@ if($INCREMENTAL){
     Set-Location "$Workdir/source"
     git pull
 } else {
+    Write-Host @"
+Set-Location "$Workdir"
+git clone --branch $Branch ``
+          --depth=1 ``
+          "https://github.com/root-project/root.git" ``
+          "$Workdir/source"
+New-Item -ItemType Directory -Force -Path "$Workdir/build"
+New-Item -ItemType Directory -Force -Path "$Workdir/install"
+"@
+
     Set-Location "$Workdir"
     git clone --branch $Branch `
               --depth=1 `
@@ -95,21 +115,34 @@ if($INCREMENTAL){
 
 
 # Generate, build and install
+Write-Host "Set-Location `"$Workdir/build`""
 Set-Location "$Workdir/build"
 
-Write-Host "cmake $CMakeParams `"$Workdir/source/`""
-#cmake @CMakeParams "$Workdir/source/"
-#cmake --build "$Workdir/build" --config "$Config" --target install
-Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
-Write-Output "this is an installed file" > "$Workdir/install/installedfile"
+if(-Not ($StubCMake)){
+    Write-Host "cmake $CMakeParams `"$Workdir/source/`""
+    cmake @CMakeParams "$Workdir/source/"
+    Write-Host "cmake --build `"$Workdir/build`" --config `"$Config`" --target install"
+    cmake --build "$Workdir/build" --config "$Config" --target install
+} else {
+    Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
+    Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
+    Write-Output "this is an installed file" > "$Workdir/install/installedfile"
+}
 
 
 
 # Upload build artifacts to S3
 if(Test-Path $ArchiveName){
+    Write-Host "Remove-Item $Workdir/$ArchiveName"
     Remove-Item "$Workdir/$ArchiveName"
 }
 # compress archive is so dogshit that it never completes with compression enabled
+Write-Host @"
+Compress-Archive ``
+    -CompressionLevel NoCompression ``
+    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" ``
+    -DestinationPath "$Workdir/$ArchiveName"
+"@
 Compress-Archive `
     -CompressionLevel NoCompression `
     -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
@@ -117,7 +150,9 @@ Compress-Archive `
 
 
 try {
-	Set-Location "$Workdir"
+    Write-Host "Set-Location `"$Workdir`""
+    Set-Location "$Workdir"
+    Write-Host "& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
     & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 } catch {
     Write-Host $_
