@@ -110,7 +110,7 @@ if(Test-Path $ArchiveName){
     Remove-Item "$Workdir/$ArchiveName"
 }
 Compress-Archive `
-    -Path "$Workdir/source" "$Workdir/build" "$Workdir/install" `
+    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
     -DestinationPath "$Workdir/$ArchiveName"
 
 try {
