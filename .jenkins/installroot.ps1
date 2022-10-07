@@ -43,7 +43,7 @@ try {
 			 BUILD ARTIFACTS ARE NOT STORED
 ===========================================================
 
-	'@
+'@
 }
 
 if(Test-Path $Workdir){
