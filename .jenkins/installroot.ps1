@@ -110,7 +110,7 @@ if(Test-Path $ArchiveName){
     Remove-Item "$Workdir/$ArchiveName"
 }
 Compress-Archive `
-    -CompressionLevel Fastest `
+    -CompressionLevel NoCompression `
     -Path <#"$Workdir/source",#> "$Workdir/build", "$Workdir/install" `
     -DestinationPath "$Workdir/$ArchiveName"
 
