@@ -32,6 +32,19 @@ if ($Generator) {
 
 Push-Location
 
+try {
+	& "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
+} catch {
+	Write-Host @'
+
+===========================================================
+                 COULD NOT CONNECT TO S3
+
+			 BUILD ARTIFACTS ARE NOT STORED
+===========================================================
+
+	'@
+}
 
 if(Test-Path $Workdir){
     Remove-Item $Workdir/* -Recurse -Force
