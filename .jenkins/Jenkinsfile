@@ -67,7 +67,7 @@ pipeline {
                 }
             }
             steps {
-			    withCredentials(
+                withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
                     sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
@@ -88,7 +88,7 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-			    withCredentials(
+                withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
                     sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
@@ -109,7 +109,7 @@ pipeline {
             }
             agent { label "${PLATFORM}" }
             steps {
-			    withCredentials(
+                withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
                     powershell './.jenkins/installroot.ps1'
