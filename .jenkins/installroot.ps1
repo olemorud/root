@@ -94,8 +94,10 @@ if($INCREMENTAL){
 Set-Location "$Workdir/build"
 
 Write-Host "cmake $CMakeParams `"$Workdir/source/`""
-cmake @CMakeParams "$Workdir/source/"
-cmake --build "$Workdir/build" --config "$Config" --target install
+#cmake @CMakeParams "$Workdir/source/"
+#cmake --build "$Workdir/build" --config "$Config" --target install
+Write-Output "this is a generator file"  > ./build/buildfile
+Write-Output "this is an installed file" > ./install/installedfile
 
 
 
