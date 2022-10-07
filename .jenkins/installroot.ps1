@@ -32,6 +32,13 @@ if ($Generator) {
 
 Push-Location
 
+
+# Print useful debug information
+Get-ChildItem env:* | Sort-Object name # dump env
+Get-Date
+
+
+# Check if a connection to S3 is possible
 try {
 	& "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
 } catch {
@@ -47,6 +54,9 @@ try {
 '@
 }
 
+
+
+# Clear the workspace
 if(Test-Path $Workdir){
     Remove-Item $Workdir/* -Recurse -Force
 } else {
@@ -54,6 +64,9 @@ if(Test-Path $Workdir){
 }
 
 
+
+# Download and extract previous build artifacts if incremental
+# If not, download entire source from git
 if($INCREMENTAL){
 	Set-Location $Workdir
 	$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
@@ -73,6 +86,9 @@ if($INCREMENTAL){
 	New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
 
+
+
+# Generate, build and install
 Set-Location "$Workdir/build"
 
 Write-Host "cmake $CMakeParams `"$Workdir/source/`""
