@@ -39,13 +39,14 @@ Get-Date
 Set-PSDebug -Trace 2 # 1: trace script lines, 2: also trace var-assigns, func. calls and scripts
 
 
-# Check if a connection to S3 is possible
+# Test S3 connection
 try {
+    Write-Output "Hello World" > helloworld.txt
+    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt"
     & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
 } catch {
     Write-Host $_
     Write-Host @'
-
 ===========================================================
                  COULD NOT CONNECT TO S3
 
