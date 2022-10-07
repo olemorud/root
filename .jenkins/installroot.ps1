@@ -116,6 +116,7 @@ Compress-Archive `
 
 
 try {
+	Set-Location "$Workdir"
     & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 } catch {
     Write-Host $_
