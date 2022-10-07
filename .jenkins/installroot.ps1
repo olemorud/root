@@ -110,8 +110,10 @@ if(Test-Path $ArchiveName){
     Remove-Item "$Workdir/$ArchiveName"
 }
 Compress-Archive `
+    -CompressionLevel Fastest `
     -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
     -DestinationPath "$Workdir/$ArchiveName"
+
 
 try {
     & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
