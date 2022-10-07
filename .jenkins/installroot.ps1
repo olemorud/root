@@ -96,5 +96,28 @@ cmake @CMakeParams "$Workdir/source/"
 cmake --build "$Workdir/build" --config "$Config" --target install
 
 
+
+# Upload build artifacts to S3
+if(Test-Path $ArchiveName){
+	Remove-Item "$Workdir/$ArchiveName"
+}
+Compress-Archive `
+	-Path "$Workdir/source" "$Workdir/build" "$Workdir/install" `
+	-DestinationPath "$Workdir/$ArchiveName"
+
+try {
+	& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+} catch {
+	Write-Host $_
+	Write-Host @'
+===========================================================
+                 ERROR UPLOADING FILES
+
+			 BUILD ARTIFACTS ARE NOT UPLOADED
+===========================================================
+'@
+}
+
+
 Pop-Location
 
