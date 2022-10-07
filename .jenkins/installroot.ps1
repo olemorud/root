@@ -36,6 +36,7 @@ Push-Location
 # Print useful debug information
 Get-ChildItem env:* | Sort-Object name # dump env
 Get-Date
+Set-PSDebug -Trace 2 # 1: trace script lines, 2: also trace var-assigns, func. calls and scripts
 
 
 # Check if a connection to S3 is possible
