@@ -109,9 +109,10 @@ Write-Output "this is an installed file" > "$Workdir/install/installedfile"
 if(Test-Path $ArchiveName){
     Remove-Item "$Workdir/$ArchiveName"
 }
+# compress archive is so dogshit that it never completes with compression enabled
 Compress-Archive `
     -CompressionLevel NoCompression `
-    -Path <#"$Workdir/source",#> "$Workdir/build", "$Workdir/install" `
+    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
     -DestinationPath "$Workdir/$ArchiveName"
 
 
