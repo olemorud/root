@@ -32,6 +32,7 @@ if ($Generator) {
 
 Push-Location
 
+
 if(Test-Path $Workdir){
     Remove-Item $Workdir/* -Recurse -Force
 } else {
@@ -39,23 +40,23 @@ if(Test-Path $Workdir){
 }
 
 
-try {
-    Set-Location $Workdir
-    $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
-    & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-    Expand-Archive -Path "$ArchiveName" `
-                   -DestinationPath "$Workdir" `
-                   -Force
-    Set-Location "$Workdir/source"
-    git pull
-} catch {
-    Set-Location "$Workdir"
-    git clone --branch $Branch `
-              --depth=1 `
-              "https://github.com/root-project/root.git" `
-              "$Workdir/source"
-    New-Item -ItemType Directory -Force -Path "$Workdir/build"
-    New-Item -ItemType Directory -Force -Path "$Workdir/install"
+if($INCREMENTAL){
+	Set-Location $Workdir
+	$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+	& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+	Expand-Archive -Path "$ArchiveName" `
+				   -DestinationPath "$Workdir" `
+				   -Force
+	Set-Location "$Workdir/source"
+	git pull
+} else {
+	Set-Location "$Workdir"
+	git clone --branch $Branch `
+			  --depth=1 `
+			  "https://github.com/root-project/root.git" `
+			  "$Workdir/source"
+	New-Item -ItemType Directory -Force -Path "$Workdir/build"
+	New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
 
 Set-Location "$Workdir/build"
@@ -66,3 +67,4 @@ cmake --build "$Workdir/build" --config "$Config" --target install
 
 
 Pop-Location
+
