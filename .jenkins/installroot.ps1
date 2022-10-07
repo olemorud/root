@@ -41,15 +41,15 @@ Set-PSDebug -Trace 2 # 1: trace script lines, 2: also trace var-assigns, func. c
 
 # Check if a connection to S3 is possible
 try {
-	& "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
+    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
 } catch {
-	Write-Host $_
-	Write-Host @'
+    Write-Host $_
+    Write-Host @'
 
 ===========================================================
                  COULD NOT CONNECT TO S3
 
-			 BUILD ARTIFACTS ARE NOT STORED
+             BUILD ARTIFACTS ARE NOT STORED
 ===========================================================
 
 '@
@@ -69,22 +69,22 @@ if(Test-Path $Workdir){
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if($INCREMENTAL){
-	Set-Location $Workdir
-	$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
-	& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-	Expand-Archive -Path "$ArchiveName" `
-				   -DestinationPath "$Workdir" `
-				   -Force
-	Set-Location "$Workdir/source"
-	git pull
+    Set-Location $Workdir
+    $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+    & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+    Expand-Archive -Path "$ArchiveName" `
+                   -DestinationPath "$Workdir" `
+                   -Force
+    Set-Location "$Workdir/source"
+    git pull
 } else {
-	Set-Location "$Workdir"
-	git clone --branch $Branch `
-			  --depth=1 `
-			  "https://github.com/root-project/root.git" `
-			  "$Workdir/source"
-	New-Item -ItemType Directory -Force -Path "$Workdir/build"
-	New-Item -ItemType Directory -Force -Path "$Workdir/install"
+    Set-Location "$Workdir"
+    git clone --branch $Branch `
+              --depth=1 `
+              "https://github.com/root-project/root.git" `
+              "$Workdir/source"
+    New-Item -ItemType Directory -Force -Path "$Workdir/build"
+    New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
 
 
@@ -100,21 +100,21 @@ cmake --build "$Workdir/build" --config "$Config" --target install
 
 # Upload build artifacts to S3
 if(Test-Path $ArchiveName){
-	Remove-Item "$Workdir/$ArchiveName"
+    Remove-Item "$Workdir/$ArchiveName"
 }
 Compress-Archive `
-	-Path "$Workdir/source" "$Workdir/build" "$Workdir/install" `
-	-DestinationPath "$Workdir/$ArchiveName"
+    -Path "$Workdir/source" "$Workdir/build" "$Workdir/install" `
+    -DestinationPath "$Workdir/$ArchiveName"
 
 try {
-	& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 } catch {
-	Write-Host $_
-	Write-Host @'
+    Write-Host $_
+    Write-Host @'
 ===========================================================
                  ERROR UPLOADING FILES
 
-			 BUILD ARTIFACTS ARE NOT UPLOADED
+             BUILD ARTIFACTS ARE NOT UPLOADED
 ===========================================================
 '@
 }
