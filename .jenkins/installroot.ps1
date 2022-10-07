@@ -111,7 +111,7 @@ if(Test-Path $ArchiveName){
 }
 Compress-Archive `
     -CompressionLevel Fastest `
-    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
+    -Path <#"$Workdir/source",#> "$Workdir/build", "$Workdir/install" `
     -DestinationPath "$Workdir/$ArchiveName"
 
 
