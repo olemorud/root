@@ -33,10 +33,12 @@ if ($Generator) {
 Push-Location
 
 
+
 # Print useful debug information
 Get-ChildItem env:* | Sort-Object name # dump env
 Get-Date
 Set-PSDebug -Trace 2 # 1: trace script lines, 2: also trace var-assigns, func. calls and scripts
+
 
 
 # Test S3 connection
@@ -68,6 +70,8 @@ if(Test-Path $Workdir){
 
 Set-Location $Workdir
 $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+
+
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
