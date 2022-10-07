@@ -35,6 +35,7 @@ Push-Location
 try {
 	& "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
 } catch {
+	Write-Host $_
 	Write-Host @'
 
 ===========================================================
