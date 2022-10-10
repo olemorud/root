@@ -105,7 +105,7 @@ $ArchiveName += '.tar.gz'
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 log @"
-if($env:INCREMENTAL){
+if("$env:INCREMENTAL" -eq "true"){
     & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     tar xvf "$ArchiveName" -C '/'
     Set-Location "$Workdir/source"
@@ -116,7 +116,7 @@ if($env:INCREMENTAL){
     New-Item -ItemType Directory -Force -Path "$Workdir/build"
     New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
-@"
+"@
 
 
 
