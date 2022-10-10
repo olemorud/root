@@ -38,7 +38,7 @@ function log {
     $Command = "$args"
     Write-Host $Command
     Measure-Command {
-        Invoke-Expression $Command
+        Invoke-Expression "$Command"
     }
 }
 
@@ -79,42 +79,26 @@ if(Test-Path $Workdir){
 }
 "@
 
-
+log @"
 Set-Location $Workdir
 $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
 $ArchiveName += '.tar.gz'
-
+"@
 
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if($INCREMENTAL){
-    Write-Host @"
-& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-Expand-Archive -Path "$ArchiveName" `
-               -DestinationPath "$Workdir" `
-               -Force
-Set-Location "$Workdir/source"
-git pull
-"@
-
+	log @"
     & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     Expand-Archive -Path "$ArchiveName" `
                    -DestinationPath "$Workdir" `
                    -Force
     Set-Location "$Workdir/source"
     git pull
-} else {
-    Write-Host @"
-Set-Location "$Workdir"
-git clone --branch $Branch ``
-          --depth=1 ``
-          "https://github.com/root-project/root.git" ``
-          "$Workdir/source"
-New-Item -ItemType Directory -Force -Path "$Workdir/build"
-New-Item -ItemType Directory -Force -Path "$Workdir/install"
 "@
-
+} else {
+	log @"
     Set-Location "$Workdir"
     git clone --branch $Branch `
               --depth=1 `
@@ -122,6 +106,7 @@ New-Item -ItemType Directory -Force -Path "$Workdir/install"
               "$Workdir/source"
     New-Item -ItemType Directory -Force -Path "$Workdir/build"
     New-Item -ItemType Directory -Force -Path "$Workdir/install"
+"@
 }
 
 
@@ -131,14 +116,12 @@ Write-Host "Set-Location `"$Workdir/build`""
 Set-Location "$Workdir/build"
 
 if(-Not ($StubCMake)){
-    Write-Host "cmake $CMakeParams `"$Workdir/source/`""
-    cmake @CMakeParams "$Workdir/source/"
-    Write-Host "cmake --build `"$Workdir/build`" --config `"$Config`" --target install"
-    cmake --build "$Workdir/build" --config "$Config" --target install
+    log cmake @CMakeParams "$Workdir/source/"
+    log cmake --build "$Workdir/build" --config "$Config" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
-    Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
-    Write-Output "this is an installed file" > "$Workdir/install/installedfile"
+    log Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
+    log Write-Output "this is an installed file" > "$Workdir/install/installedfile"
 }
 
 
@@ -148,13 +131,6 @@ if(Test-Path $ArchiveName){
     Write-Host "Remove-Item $Workdir/$ArchiveName"
     Remove-Item "$Workdir/$ArchiveName"
 }
-
-#Write-Host @"
-#tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-#"@
-#Measure-Command {
-#    tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-#}
 
 log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
