@@ -142,7 +142,9 @@ log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir
 try {
     log Set-Location "$Workdir"
     Write-Host "&" "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
-    & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    Measure-Command {
+        & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    } | Select-Object TotalMinutes
 } catch {
     Write-Host $_
     Write-Host @'
