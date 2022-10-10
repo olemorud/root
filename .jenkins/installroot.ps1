@@ -81,7 +81,7 @@ if(Test-Path $Workdir){
 
 log @"
 Set-Location $Workdir
-$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+$ArchiveName = `& "$PSScriptRoot/s3win/getbuildname.ps1"
 $ArchiveName += '.tar.gz'
 "@
 
