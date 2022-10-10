@@ -52,10 +52,8 @@ function log {
         Invoke-Expression $Command
     }
 
-    if($Time:TotalSeconds -gt 15){
-        Write-Host "$e[3m" # italic
-        Write-Host "Finished expression in $Time:TotalMinutes minutes"
-    }
+    Write-Host "$e[3m" # italic
+    Write-Host "Finished expression in $Time:TotalMinutes minutes"
 
     Write-Host "$e[0m" # reset
 }
@@ -104,19 +102,16 @@ $ArchiveName += '.tar.gz'
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
-log @"
 if("$env:INCREMENTAL" -eq "true"){
-    & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-    tar xvf "$ArchiveName" -C '/'
-    Set-Location "$Workdir/source"
-    git pull
+    log & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+    log tar xvf "$ArchiveName" -C '/'
+    log Set-Location "$Workdir/source"
+    log git pull
 } else {
-    Set-Location "$Workdir"
-    git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
-    New-Item -ItemType Directory -Force -Path "$Workdir/build"
-    New-Item -ItemType Directory -Force -Path "$Workdir/install"
+    log git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
+    log New-Item -ItemType Directory -Force -Path "$Workdir/build"
+    log New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
-"@
 
 
 
