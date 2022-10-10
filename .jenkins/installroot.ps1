@@ -34,6 +34,8 @@ if ($Generator) {
 
 Push-Location
 
+$ScriptLog = ""
+
 # Does not work very well with:
 # - variable assignments
 # - ampersands
@@ -42,6 +44,7 @@ Push-Location
 function log {
     $Command = "$args"
     Write-Host $Command
+	ScriptLog += $Command
     $Time = Measure-Command {
         Invoke-Expression $Command
     }
@@ -142,6 +145,7 @@ log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir
 try {
     log Set-Location "$Workdir"
     Write-Host "&" "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    $ScriptLog += "`n & `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
     Measure-Command {
         & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
     } | Select-Object TotalMinutes
@@ -159,3 +163,10 @@ try {
 
 Pop-Location
 
+# Write a log of commands needed to replcate build
+Write-Host @"
+************************************
+*    Script to replicate build     *
+************************************
+"@
+Write-Host $ScriptLog
