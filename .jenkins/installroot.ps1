@@ -32,9 +32,6 @@ if ($Generator) {
 }
 
 
-Start-Transcript -Path "$Workdir/transcript"
-
-
 Push-Location
 
 function log {
@@ -182,6 +179,4 @@ try {
 
 
 Pop-Location
-echo "Printing script:"
-Get-Content "$Workdir/transcript" | Write-Host
 
