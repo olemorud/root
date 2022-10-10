@@ -41,9 +41,7 @@ $global:ScriptLog = ""
 function log {
     $Command = "$args"
 
-    Write-Host '************'
-    Write-Host $Command
-    Write-Host '************'
+    Write-Host "$Command" -ForegroundColor Red
 
     $global:ScriptLog += "`n$Command"
 
@@ -51,8 +49,8 @@ function log {
         Invoke-Expression $Command
     }
 
-    if($Time.TotalSeconds -gt 15){
-        Write-Host "Finished in $Time.TotalMinutes minutes"
+    if($Time:TotalSeconds -gt 15){
+        Write-Host "Finished expression in $Time:TotalMinutes minutes"
     }
 }
 
@@ -67,8 +65,8 @@ Get-Date
 # Test S3 connection
 try {
     Write-Output "Hello World" > helloworld.txt
-    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt"
-    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
+    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt" | Out-Null
+    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt" | Out-Null
 } catch {
     Write-Host $_
     Write-Host @'
@@ -160,6 +158,7 @@ try {
 
 # Write a log of commands needed to replcate build
 Write-Host @"
+`n`n`n
 ************************************
 *    Script to replicate build     *
 ************************************
