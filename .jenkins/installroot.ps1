@@ -82,6 +82,7 @@ try {
              BUILD ARTIFACTS ARE NOT STORED
 ===========================================================
 '@
+    $env:INCREMENTAL = false
 }
 
 
@@ -103,12 +104,10 @@ $ArchiveName += '.tar.gz'
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
-if($INCREMENTAL){
+if($env:INCREMENTAL){
     log @"
     & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-    Expand-Archive -Path "$ArchiveName" `
-                   -DestinationPath "$Workdir" `
-                   -Force
+    tar xvf "$ArchiveName" -C '/'
     Set-Location "$Workdir/source"
     git pull
 "@
