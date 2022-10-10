@@ -53,7 +53,7 @@ function log {
     }
 
     Write-Host "$e[3m" # italic
-    Write-Host "Finished expression in $Time:TotalMinutes minutes"
+    Write-Host "Finished expression in $Time.TotalMinutes minutes"
 
     Write-Host "$e[0m" # reset
 }
@@ -103,7 +103,7 @@ $ArchiveName += '.tar.gz'
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if("$env:INCREMENTAL" -eq "true"){
-    log & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+    log `& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     log tar xvf "$ArchiveName" -C '/'
     log Set-Location "$Workdir/source"
     log git pull
