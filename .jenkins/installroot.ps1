@@ -61,7 +61,6 @@ function log {
 # Print useful debug information
 Get-ChildItem env:* | Sort-Object name # dump env
 Get-Date
-#Set-PSDebug -Trace 2 # 1: trace script lines, 2: also trace var-assigns, func. calls and scripts
 
 
 
@@ -145,15 +144,7 @@ log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir
 
 try {
     log Set-Location "$Workdir"
-    Write-Host @"
-& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
-"@
-    $global:ScriptLog += @"
-& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
-"@
-    Measure-Command {
-        & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
-    } | Select-Object TotalMinutes
+    log "& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
 } catch {
     Write-Host $_
     Write-Host @'
@@ -172,8 +163,9 @@ Write-Host @"
 ************************************
 *    Script to replicate build     *
 ************************************
-"@
-Write-Host $global:ScriptLog
+$global:ScriptLog
 
+************************************
+"@
 
 Pop-Location
