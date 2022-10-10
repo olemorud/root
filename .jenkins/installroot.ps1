@@ -32,7 +32,7 @@ if ($Generator) {
 }
 
 # Wrapper to log and execute command with time measurement
-function WithLog ){
+function WithLog(){
     $Command = "$args[0]"
     Write-Host "$Command"
     Measure-Command {
