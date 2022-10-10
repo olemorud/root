@@ -48,7 +48,7 @@ function log {
     Write-Host $Command
     Write-Host '************'
 
-    $ScriptLog += $Command
+    $ScriptLog += "`n$Command"
 
     $Time = Measure-Command {
         Invoke-Expression $Command
@@ -81,7 +81,6 @@ try {
 
              BUILD ARTIFACTS ARE NOT STORED
 ===========================================================
-
 '@
 }
 
@@ -99,6 +98,7 @@ if(Test-Path $Workdir){
 log Set-Location $Workdir
 $ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
 $ArchiveName += '.tar.gz'
+
 
 
 # Download and extract previous build artifacts if incremental
@@ -122,6 +122,7 @@ if($INCREMENTAL){
 }
 
 
+
 # Generate, build and install
 log Set-Location "$Workdir/build"
 
@@ -135,8 +136,9 @@ if(-Not ($StubCMake)){
 }
 
 
-log @"
+
 # Upload build artifacts to S3
+log @"
 if(Test-Path $ArchiveName){
     Write-Host "Remove-Item $Workdir/$ArchiveName"
     Remove-Item "$Workdir/$ArchiveName"
@@ -144,9 +146,6 @@ if(Test-Path $ArchiveName){
 "@
 
 log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-
-
-
 
 try {
     log Set-Location "$Workdir"
@@ -167,7 +166,6 @@ try {
 }
 
 
-Pop-Location
 
 # Write a log of commands needed to replcate build
 Write-Host @"
@@ -176,3 +174,6 @@ Write-Host @"
 ************************************
 "@
 Write-Host $ScriptLog
+
+
+Pop-Location
