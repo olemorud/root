@@ -23,6 +23,7 @@ $Body = @"
     }
 "@
 
+$ProgressPreference = 'SilentlyContinue'
 $Response = Invoke-WebRequest `
      -Method 'POST' `
      -Body $Body `
