@@ -44,7 +44,7 @@ $ScriptLog = ""
 function log {
     $Command = "$args"
     Write-Host $Command
-	ScriptLog += $Command
+    $ScriptLog += $Command
     $Time = Measure-Command {
         Invoke-Expression $Command
     }
