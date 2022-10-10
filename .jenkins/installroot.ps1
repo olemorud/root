@@ -36,10 +36,10 @@ Push-Location
 
 # Does not work very well with variable assignments or ampersands
 function log {
-    $Command = "$args"
+	$Command = "$args"
     Write-Host $Command
     Measure-Command {
-        Invoke-Expression "$Command"
+        Invoke-Expression $Command
     }
 }
 
@@ -99,10 +99,7 @@ if($INCREMENTAL){
 } else {
 	log @"
     Set-Location "$Workdir"
-    git clone --branch $Branch `
-              --depth=1 `
-              "https://github.com/root-project/root.git" `
-              "$Workdir/source"
+    git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
     New-Item -ItemType Directory -Force -Path "$Workdir/build"
     New-Item -ItemType Directory -Force -Path "$Workdir/install"
 "@
