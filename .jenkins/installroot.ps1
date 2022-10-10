@@ -53,7 +53,7 @@ function log {
     }
 
     Write-Host "$e[3m" # italic
-    Write-Host "Finished expression in $Time.TotalMinutes minutes"
+    Write-Host "Finished expression in $Time minutes"
 
     Write-Host "$e[0m" # reset
 }
