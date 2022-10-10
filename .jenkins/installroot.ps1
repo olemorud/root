@@ -149,7 +149,9 @@ log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir
 
 try {
     log Set-Location "$Workdir"
-    Write-Host "&" "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    Write-Host @"
+& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+"@
     $ScriptLog += @"
 & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 "@
