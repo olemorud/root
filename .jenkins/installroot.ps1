@@ -40,15 +40,17 @@ $global:ScriptLog = ""
 # - control flows / script blocks
 function log {
     $Command = "$args"
-	$e = [char]27
+    $e = [char]27
 
     Write-Host "$Command"
 
     $global:ScriptLog += "`n$Command"
 
+    Write-Host "$e[32m"
     $Time = Measure-Command {
-        Invoke-Expression $Command | Write-Output "$e[32m$_$e[30m"
+        Invoke-Expression $Command
     }
+    Write-Host "$e[30m"
 
     if($Time:TotalSeconds -gt 15){
         Write-Host "Finished expression in $Time:TotalMinutes minutes"

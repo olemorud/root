@@ -108,13 +108,14 @@ pipeline {
                 expression { PLATFORM ==~ /.*win.*/ }
             }
             agent { label "${PLATFORM}" }
+            options {
+                ansiColor('xterm')
+            }
             steps {
                 withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
-                    ansiColor('xterm'){
-                        powershell './.jenkins/installroot.ps1'
-                    }
+                    powershell './.jenkins/installroot.ps1'
                 }
             }
             post { failure {
