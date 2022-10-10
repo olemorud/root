@@ -144,7 +144,7 @@ if(Test-Path $ArchiveName){
 }
 "@
 
-log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+log tar Pczf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
 try {
     log Set-Location "$Workdir"
