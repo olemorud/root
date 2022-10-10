@@ -42,19 +42,22 @@ function log {
     $Command = "$args"
     $e = [char]27
 
+    Write-Host "$e[1m" # bold text
     Write-Host "$Command"
 
     $global:ScriptLog += "`n$Command"
 
-    Write-Host "$e[32m"
+    Write-Host "$e[0m" # reset text
     $Time = Measure-Command {
         Invoke-Expression $Command
     }
-    Write-Host "$e[30m"
 
     if($Time:TotalSeconds -gt 15){
+        Write-Host "$e[3m" # italic
         Write-Host "Finished expression in $Time:TotalMinutes minutes"
     }
+
+    Write-Host "$e[0m" # reset
 }
 
 
