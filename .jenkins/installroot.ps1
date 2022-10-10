@@ -31,6 +31,15 @@ if ($Generator) {
     $CMakeParams += "-G`"$Generator`""
 }
 
+# Wrapper to log and execute command with time measurement
+function WithLog ){
+    $Command = "$args[0]"
+    Write-Host "$Command"
+    Measure-Command {
+        Invoke-Expression $Command
+    }
+}
+
 Push-Location
 
 
@@ -55,74 +64,56 @@ try {
 
              BUILD ARTIFACTS ARE NOT STORED
 ===========================================================
-
 '@
 }
 
 
 
 # Clear the workspace
-if(Test-Path $Workdir){
-    Remove-Item $Workdir/* -Recurse -Force
-} else {
-    New-Item -ItemType Directory -Force -Path "$Workdir"
-}
+WithLog @"
+	if(Test-Path $Workdir){
+		Remove-Item $Workdir/* -Recurse -Force
+	} else {
+		New-Item -ItemType Directory -Force -Path "$Workdir"
+	}
 
-
-Set-Location $Workdir
-$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
-
+	Set-Location $Workdir
+	$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+"@
 
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if($INCREMENTAL){
-    Write-Host @"
-& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-Expand-Archive -Path "$ArchiveName" `
-               -DestinationPath "$Workdir" `
-               -Force
-Set-Location "$Workdir/source"
-git pull
+	WithLog @"
+		& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+		Expand-Archive -Path "$ArchiveName" `
+					   -DestinationPath "$Workdir" `
+					   -Force
+		Set-Location "$Workdir/source"
+		git pull
 "@
-
-    & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
-    Expand-Archive -Path "$ArchiveName" `
-                   -DestinationPath "$Workdir" `
-                   -Force
-    Set-Location "$Workdir/source"
-    git pull
 } else {
-    Write-Host @"
-Set-Location "$Workdir"
-git clone --branch $Branch ``
-          --depth=1 ``
-          "https://github.com/root-project/root.git" ``
-          "$Workdir/source"
-New-Item -ItemType Directory -Force -Path "$Workdir/build"
-New-Item -ItemType Directory -Force -Path "$Workdir/install"
+	WithLog @"
+		Set-Location "$Workdir"
+		git clone --branch $Branch `
+				  --depth=1 `
+				  "https://github.com/root-project/root.git" `
+				  "$Workdir/source"
+		New-Item -ItemType Directory -Force -Path "$Workdir/build"
+		New-Item -ItemType Directory -Force -Path "$Workdir/install"
 "@
-
-    Set-Location "$Workdir"
-    git clone --branch $Branch `
-              --depth=1 `
-              "https://github.com/root-project/root.git" `
-              "$Workdir/source"
-    New-Item -ItemType Directory -Force -Path "$Workdir/build"
-    New-Item -ItemType Directory -Force -Path "$Workdir/install"
 }
 
 
 
 # Generate, build and install
-Write-Host "Set-Location `"$Workdir/build`""
-Set-Location "$Workdir/build"
+WithLog 'Set-Location "$Workdir/build"'
+
 
 if(-Not ($StubCMake)){
-    Write-Host "cmake $CMakeParams `"$Workdir/source/`""
-    cmake @CMakeParams "$Workdir/source/"
-    Write-Host "cmake --build `"$Workdir/build`" --config `"$Config`" --target install"
-    cmake --build "$Workdir/build" --config "$Config" --target install
+    WithLog ' cmake @CMakeParams "$Workdir/source/" '
+    WithLog ' cmake --build "$Workdir/build" --config "$Config" --target install '
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
@@ -133,32 +124,16 @@ if(-Not ($StubCMake)){
 
 # Upload build artifacts to S3
 if(Test-Path $ArchiveName){
-    Write-Host "Remove-Item $Workdir/$ArchiveName"
-    Remove-Item "$Workdir/$ArchiveName"
+    WithLog 'Remove-Item "$Workdir/$ArchiveName"'
 }
-# compress archive is so dogshit that it never completes with compression enabled
-#Write-Host @"
-#Compress-Archive ``
-#    -CompressionLevel NoCompression ``
-#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" ``
-#    -DestinationPath "$Workdir/$ArchiveName"
-#"@
-#Compress-Archive `
-#    -CompressionLevel NoCompression `
-#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
-#    -DestinationPath "$Workdir/$ArchiveName"
 
-Write-Host @"
-tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-"@
-tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+
+WithLog 'tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"'
 
 
 try {
-    Write-Host "Set-Location `"$Workdir`""
-    Set-Location "$Workdir"
-    Write-Host "& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
-    & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
+    WithLog 'Set-Location "$Workdir"'
+    WithLog '& "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"'
 } catch {
     Write-Host $_
     Write-Host @'
