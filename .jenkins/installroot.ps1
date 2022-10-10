@@ -118,8 +118,8 @@ if(-Not ($StubCMake)){
     log cmake --build "$Workdir/build" --config "$Config" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
-    log Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
-    log Write-Output "this is an installed file" > "$Workdir/install/installedfile"
+    Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
+    Write-Output "this is an installed file" > "$Workdir/install/installedfile"
 }
 
 
