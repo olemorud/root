@@ -137,16 +137,21 @@ if(Test-Path $ArchiveName){
     Remove-Item "$Workdir/$ArchiveName"
 }
 # compress archive is so dogshit that it never completes with compression enabled
+#Write-Host @"
+#Compress-Archive ``
+#    -CompressionLevel NoCompression ``
+#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" ``
+#    -DestinationPath "$Workdir/$ArchiveName"
+#"@
+#Compress-Archive `
+#    -CompressionLevel NoCompression `
+#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
+#    -DestinationPath "$Workdir/$ArchiveName"
+
 Write-Host @"
-Compress-Archive ``
-    -CompressionLevel NoCompression ``
-    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" ``
-    -DestinationPath "$Workdir/$ArchiveName"
+tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 "@
-Compress-Archive `
-    -CompressionLevel NoCompression `
-    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
-    -DestinationPath "$Workdir/$ArchiveName"
+tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
 
 try {
