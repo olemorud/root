@@ -34,6 +34,7 @@ if ($Generator) {
 
 Push-Location
 
+# Does not work very well with variable assignments or ampersands
 function log {
     $Command = "$args"
     Write-Host $Command
@@ -79,11 +80,9 @@ if(Test-Path $Workdir){
 }
 "@
 
-log @"
-Set-Location $Workdir
-`$ArchiveName = "&" "$PSScriptRoot/s3win/getbuildname.ps1"
-`$ArchiveName += '.tar.gz'
-"@
+log Set-Location $Workdir
+$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
+$ArchiveName += '.tar.gz'
 
 
 # Download and extract previous build artifacts if incremental
@@ -110,10 +109,8 @@ if($INCREMENTAL){
 }
 
 
-
 # Generate, build and install
-Write-Host "Set-Location `"$Workdir/build`""
-Set-Location "$Workdir/build"
+log Set-Location "$Workdir/build"
 
 if(-Not ($StubCMake)){
     log cmake @CMakeParams "$Workdir/source/"
@@ -125,12 +122,13 @@ if(-Not ($StubCMake)){
 }
 
 
-
+log @"
 # Upload build artifacts to S3
 if(Test-Path $ArchiveName){
     Write-Host "Remove-Item $Workdir/$ArchiveName"
     Remove-Item "$Workdir/$ArchiveName"
 }
+"@
 
 log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
@@ -138,9 +136,8 @@ log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir
 
 
 try {
-    Write-Host "Set-Location `"$Workdir`""
-    Set-Location "$Workdir"
-    Write-Host "& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
+    log Set-Location "$Workdir"
+    Write-Host "&" "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
     & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 } catch {
     Write-Host $_
