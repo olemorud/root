@@ -37,6 +37,14 @@ Start-Transcript -Path "$Workdir/transcript"
 
 Push-Location
 
+function log {
+    $Command = "$args"
+    Write-Host $Command
+    Measure-Command {
+        Invoke-Expression $Command
+    }
+}
+
 
 
 # Print useful debug information
@@ -66,11 +74,13 @@ try {
 
 
 # Clear the workspace
+log @"
 if(Test-Path $Workdir){
     Remove-Item $Workdir/* -Recurse -Force
 } else {
     New-Item -ItemType Directory -Force -Path "$Workdir"
 }
+"@
 
 
 Set-Location $Workdir
@@ -141,23 +151,17 @@ if(Test-Path $ArchiveName){
     Write-Host "Remove-Item $Workdir/$ArchiveName"
     Remove-Item "$Workdir/$ArchiveName"
 }
-#Write-Host @"
-#Compress-Archive ``
-#    -CompressionLevel NoCompression ``
-#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" ``
-#    -DestinationPath "$Workdir/$ArchiveName"
-#"@
-#Compress-Archive `
-#    -CompressionLevel NoCompression `
-#    -Path "$Workdir/source", "$Workdir/build", "$Workdir/install" `
-#    -DestinationPath "$Workdir/$ArchiveName"
 
-Write-Host @"
-tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-"@
-Measure-Command {
-    tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
-}
+#Write-Host @"
+#tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+#"@
+#Measure-Command {
+#    tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+#}
+
+log tar czf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+
+
 
 
 try {
@@ -178,6 +182,6 @@ try {
 
 
 Pop-Location
-
-Get-Content "$Workdir/transcript"
+echo "Printing script:"
+Get-Content "$Workdir/transcript" | Write-Host
 
