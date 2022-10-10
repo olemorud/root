@@ -54,8 +54,8 @@ Get-Date
 # Test S3 connection
 try {
     Write-Output "Hello World" > helloworld.txt
-    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt"
-    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt"
+    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt" | out-null
+    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt" | out-null
 } catch {
     Write-Host $_
     Write-Host @'
