@@ -34,7 +34,11 @@ if ($Generator) {
 
 Push-Location
 
-# Does not work very well with variable assignments or ampersands
+# Does not work very well with:
+# - variable assignments
+# - ampersands
+# - pipes / redirections
+# - control flows / script blocks
 function log {
 	$Command = "$args"
     Write-Host $Command
