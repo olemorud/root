@@ -40,10 +40,13 @@ Push-Location
 # - pipes / redirections
 # - control flows / script blocks
 function log {
-	$Command = "$args"
+    $Command = "$args"
     Write-Host $Command
-    Measure-Command {
+    $Time = Measure-Command {
         Invoke-Expression $Command
+    }
+    if($Time.TotalSeconds -gt 15){
+        Write-Host $Time.TotalMinutes
     }
 }
 
@@ -92,7 +95,7 @@ $ArchiveName += '.tar.gz'
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if($INCREMENTAL){
-	log @"
+    log @"
     & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
     Expand-Archive -Path "$ArchiveName" `
                    -DestinationPath "$Workdir" `
@@ -101,7 +104,7 @@ if($INCREMENTAL){
     git pull
 "@
 } else {
-	log @"
+    log @"
     Set-Location "$Workdir"
     git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
     New-Item -ItemType Directory -Force -Path "$Workdir/build"
