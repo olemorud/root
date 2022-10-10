@@ -43,13 +43,19 @@ $ScriptLog = ""
 # - control flows / script blocks
 function log {
     $Command = "$args"
+
+    Write-Host '************'
     Write-Host $Command
+    Write-Host '************'
+
     $ScriptLog += $Command
+
     $Time = Measure-Command {
         Invoke-Expression $Command
     }
+
     if($Time.TotalSeconds -gt 15){
-        Write-Host $Time.TotalMinutes
+        Write-Host "Finished in $Time.TotalMinutes minutes"
     }
 }
 
