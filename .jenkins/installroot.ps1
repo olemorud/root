@@ -2,15 +2,12 @@
 #
 # maintainer: Ole Morud ole.kristian.morud@cern.ch
 #
-<# Usage (All parameters are optional, see below for default values):
+<# Usage:
 installroot.ps1  -Generator        <Generator> `
                  -TargetArch       [ARM|ARM64|Win32|x64] `
                  -Config           [Debug, MinSizeRel, Optimized, Release, RelWithDebInfo] `
                  -ToolchainVersion [x64|Win32] `
                  -Workdir          <Path>
-
- WARNING:
-   All contents of <Workdir> will be deleted!
 #>
 
 param(
