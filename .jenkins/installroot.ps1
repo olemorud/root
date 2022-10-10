@@ -34,7 +34,7 @@ if ($Generator) {
 
 Push-Location
 
-$ScriptLog = ""
+$global:ScriptLog = ""
 
 # Does not work very well with:
 # - variable assignments
@@ -48,7 +48,7 @@ function log {
     Write-Host $Command
     Write-Host '************'
 
-    $ScriptLog += "`n$Command"
+    $global:ScriptLog += "`n$Command"
 
     $Time = Measure-Command {
         Invoke-Expression $Command
@@ -152,7 +152,7 @@ try {
     Write-Host @"
 & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 "@
-    $ScriptLog += @"
+    $global:ScriptLog += @"
 & "$PSScriptRoot/s3win/upload.ps1" "$ArchiveName"
 "@
     Measure-Command {
@@ -177,7 +177,7 @@ Write-Host @"
 *    Script to replicate build     *
 ************************************
 "@
-Write-Host $ScriptLog
+Write-Host $global:ScriptLog
 
 
 Pop-Location
