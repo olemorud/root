@@ -42,18 +42,18 @@ function log {
 
     Write-Host "$e[1m" # bold text
     Write-Host "$Command"
+    Write-Host "$e[0m" # reset text
 
     $global:ScriptLog += "`n$Command"
 
-    Write-Host "$e[0m" # reset text
+    [bool]$Success = 0
     $Time = Measure-Command {
-        try {
-            Invoke-Expression $Command';$?' | Out-Default
-        } catch {
-            Write-Output "Error: $_" | Out-Default
-            Exit 1
-        }
+        $Success = Invoke-Expression $Command';$?' | Out-Default
     }
+    if(-Not $Success){
+        Write-Host "Expression failed"
+    }
+
 
     Write-Host "$e[3m" # italic
     Write-Host "Finished expression in $Time minutes"
