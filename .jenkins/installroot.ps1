@@ -17,7 +17,7 @@ param(
     [string]$TargetArch = "x64",       # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
     [string]$Workdir = "$HOME/ROOT",   # Where to download, setup and install ROOT
-    [bool]$StubCMake = 0
+    [bool]$StubCMake = 1
 )
 $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
@@ -118,10 +118,10 @@ if("$env:INCREMENTAL" -eq "true"){
 
 # Generate, build and install
 if(-Not ($StubCMake)){
-    $NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
+    #$NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
     log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
-    log cmake --build . --config "$Config" --parallel $NCores --target install
+    log cmake --build . --config "$Config" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
