@@ -32,6 +32,7 @@ if ($Generator) {
 Push-Location
 
 $global:ScriptLog = ""
+$ErrorActionPreference = 'Exit'
 
 
 # When logging, Pipes, ampersands and some other symbols have to be escaped
@@ -46,18 +47,13 @@ function log {
 
     $global:ScriptLog += "`n$Command"
 
-    [bool]$Success = 0
     $Time = Measure-Command {
-        $Success = Invoke-Expression $Command'`n$?' | Out-Default
-    }
-    if(-Not $Success){
-        Write-Host "Expression failed"
-        Exit 1
+        Invoke-Expression $Command | Out-Default
     }
 
 
     Write-Host "$e[3m" # italic
-    Write-Host "Finished expression in $Time minutes"
+    Write-Host "Finished expression in $Time"
     Write-Host "$e[0m" # reset
 }
 
