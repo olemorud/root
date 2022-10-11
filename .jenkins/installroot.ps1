@@ -20,7 +20,7 @@ param(
     [bool]$StubCMake = 0
 )
 $CMakeParams = @(
-    "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"".Replace('\', '\\').Replace('/','\\'),
+    "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
     "-A`"$TargetArch`"",
     "-Thost=`"$ToolchainVersion`""
 )
@@ -117,11 +117,9 @@ if("$env:INCREMENTAL" -eq "true"){
 
 # Generate, build and install
 if(-Not ($StubCMake)){
+	log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
-    log Push-Location
-    log Set-Location "$Workdir/install" #CMAKE_INSTALL_PREFIX doesn't work so we'll manually change working dir for now
     log cmake --build "$Workdir/build" --config "$Config" --target install
-    log Pop-Location
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
