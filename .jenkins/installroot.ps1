@@ -33,11 +33,9 @@ Push-Location
 
 $global:ScriptLog = ""
 
-# Does not work very well with:
-# - variable assignments
-# - ampersands
-# - pipes / redirections
-# - control flows / script blocks
+
+# When logging, Pipes, ampersands and some other symbols have to be escaped
+# Variables do  not expand when  using single quotes.  Escape them manually
 function log {
     $Command = "$args"
     $e = [char]27
