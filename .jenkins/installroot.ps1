@@ -49,7 +49,7 @@ function log {
 
     Write-Host "$e[0m" # reset text
     $Time = Measure-Command {
-        Invoke-Expression $Command
+        Invoke-Expression $Command | Write-Host
     }
 
     Write-Host "$e[3m" # italic
