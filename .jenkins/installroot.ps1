@@ -48,7 +48,7 @@ function log {
 
     [bool]$Success = 0
     $Time = Measure-Command {
-        $Success = Invoke-Expression $Command';$?' | Out-Default
+        $Success = Invoke-Expression $Command'`n$?' | Out-Default
     }
     if(-Not $Success){
         Write-Host "Expression failed"
@@ -122,9 +122,10 @@ if("$env:INCREMENTAL" -eq "true"){
 
 # Generate, build and install
 if(-Not ($StubCMake)){
+    $NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
     log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
-    log cmake --build . --config "$Config" --target install
+    log cmake --build . --config "$Config" --parallel $NCores --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
