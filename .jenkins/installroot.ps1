@@ -20,7 +20,7 @@ param(
     [bool]$StubCMake = 0
 )
 $CMakeParams = @(
-    "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
+    "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"".Replace('\', '\\').Replace('/','\\'),
     "-A`"$TargetArch`"",
     "-Thost=`"$ToolchainVersion`""
 )

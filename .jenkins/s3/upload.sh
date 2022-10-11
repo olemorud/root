@@ -10,7 +10,7 @@ FILE=$1
 URL=https://s3.cern.ch/swift/v1/ROOT-build-artifacts
 TOKEN=$("$SCRIPT_DIR/auth.sh")
 
-echo "curl -i \"$URL/$FILE\" -X PUT -T \"$FILE\" -H \"X-Auth-Token: $TOKEN\""
+echo "curl -i \"$URL/$FILE\" -X PUT -T \"$FILE\" -H \"X-Auth-Token: ****\""
 
 curl \
 	-i "$URL/$FILE" \
