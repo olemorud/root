@@ -52,6 +52,7 @@ function log {
     }
     if(-Not $Success){
         Write-Host "Expression failed"
+        Exit 1
     }
 
 
