@@ -47,12 +47,16 @@ function log {
 
     Write-Host "$e[0m" # reset text
     $Time = Measure-Command {
-        Invoke-Expression $Command | Out-Default
+        try {
+            Invoke-Expression $Command';$?' | Out-Default
+        } catch {
+            Write-Output "Error: $_" | Out-Default
+            Exit 1
+        }
     }
 
     Write-Host "$e[3m" # italic
     Write-Host "Finished expression in $Time minutes"
-
     Write-Host "$e[0m" # reset
 }
 
