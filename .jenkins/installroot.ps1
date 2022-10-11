@@ -51,16 +51,15 @@ function log {
         Invoke-Expression -Command "$Command" | Out-Default
     }
     if($LASTEXITCODE -ne 0) {
-        Write-Host "$e[1m$e[41m" # bold red
+        Write-Host "$e[1m$e[31m" # bold red
         Write-Host "Expression above failed"
+        Write-Host "$e[1m$e[31m" # reset
         Exit $LASTEXITCODE
     } else {
         Write-Host "$e[3m" # italic
         Write-Host "Finished expression in $Time"
         Write-Host "$e[0m" # reset
     }
-
-
 }
 
 
