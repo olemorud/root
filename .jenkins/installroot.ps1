@@ -50,12 +50,17 @@ function log {
     $Time = Measure-Command {
         Invoke-Expression -Command "$Command" | Out-Default
     }
-    Write-Host $LASTEXITCODE
+    if($LASTEXITCODE -ne 0) {
+        Write-Host "$e[1m$e[41m" # bold red
+        Write-Host "Expression above failed"
+        Exit $LASTEXITCODE
+    } else {
+        Write-Host "$e[3m" # italic
+        Write-Host "Finished expression in $Time"
+        Write-Host "$e[0m" # reset
+    }
 
 
-    Write-Host "$e[3m" # italic
-    Write-Host "Finished expression in $Time"
-    Write-Host "$e[0m" # reset
 }
 
 
