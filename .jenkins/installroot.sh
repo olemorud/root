@@ -55,5 +55,5 @@ rm -f "$ARCHIVE_NAME"
 tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
 "$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"
 
-echo "$(cat $0)"
+echo "$(cat ${BASH_SOURCE[0]})"
 
