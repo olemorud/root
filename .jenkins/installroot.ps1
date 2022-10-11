@@ -121,7 +121,7 @@ if("$env:INCREMENTAL" -eq "true"){
 
 # Generate, build and install
 if(-Not ($StubCMake)){
-	log Set-Location "$Workdir/build"
+    log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
     log cmake --build . --config "$Config" --target install
 } else {
