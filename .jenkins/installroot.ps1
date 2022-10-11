@@ -116,11 +116,12 @@ if("$env:INCREMENTAL" -eq "true"){
 
 
 # Generate, build and install
-log Set-Location "$Workdir/build"
-
 if(-Not ($StubCMake)){
     log cmake @CMakeParams "$Workdir/source/"
+    Push-Location
+    Set-Location "$Workdir/install" #CMAKE_INSTALL_PREFIX doesn't work so we'll manually change working dir for now
     log cmake --build "$Workdir/build" --config "$Config" --target install
+    Pop-Location
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
