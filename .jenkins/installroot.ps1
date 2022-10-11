@@ -119,7 +119,7 @@ if("$env:INCREMENTAL" -eq "true"){
 if(-Not ($StubCMake)){
 	log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
-    log cmake --build "$Workdir/build" --config "$Config" --target install
+    log cmake --build . --config "$Config" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
