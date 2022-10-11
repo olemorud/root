@@ -32,7 +32,6 @@ if ($Generator) {
 Push-Location
 
 $global:ScriptLog = ""
-$ErrorActionPreference = 'Exit'
 
 
 # When logging, Pipes, ampersands and some other symbols have to be escaped
@@ -47,9 +46,11 @@ function log {
 
     $global:ScriptLog += "`n$Command"
 
+    $global:LASTEXITCODE = 0
     $Time = Measure-Command {
-        Invoke-Expression $Command | Out-Default
+        Invoke-Expression -Command "$Command" | Out-Default
     }
+    Write-Host $LASTEXITCODE
 
 
     Write-Host "$e[3m" # italic
@@ -103,7 +104,7 @@ $ArchiveName += '.tar.gz'
 # If not, download entire source from git
 if("$env:INCREMENTAL" -eq "true"){
     log @"
-`& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
 "@
     log tar xvf "$ArchiveName" -C '/'
     log Set-Location "$Workdir/source"
@@ -142,7 +143,7 @@ log tar Pczf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdi
 
 try {
     log Set-Location "$Workdir"
-    log "& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
+    log "`& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
 } catch {
     Write-Host $_
     Write-Host @'
