@@ -1,8 +1,9 @@
-# POWERSHELL SCRIPT TO INSTALL ROOT ON WINDOWS
-#
-# maintainer: Ole Morud ole.kristian.morud@cern.ch
-#
-<# Usage:
+<#
+POWERSHELL SCRIPT TO INSTALL ROOT ON WINDOWS
+
+maintainer: Ole Morud ole.kristian.morud@cern.ch
+
+Usage:
 installroot.ps1  -Generator        <Generator> `
                  -TargetArch       [ARM|ARM64|Win32|x64] `
                  -Config           [Debug, MinSizeRel, Optimized, Release, RelWithDebInfo] `
