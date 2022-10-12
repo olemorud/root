@@ -21,7 +21,7 @@ if [ "$INCREMENTAL" = true ]; then
     cd $ARCHIVE_DIR || exit 1
     "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
-    if ! tar -xvf "$ARCHIVE_NAME" -C /; then
+    if ! tar -xf "$ARCHIVE_NAME" -C /; then
         INCREMENTAL=false
     fi
 fi
