@@ -34,7 +34,8 @@ Push-Location
 $global:ScriptLog = ""
 
 
-
+$env:PATH += ";C:\Users\stesting\AppData\Roaming\Python\Python310\Scripts"
+pip install --upgrade pip
 pip install numpy
 exit 123
 
