@@ -34,8 +34,14 @@ Push-Location
 $global:ScriptLog = ""
 
 
+
+pip install numpy
+exit 123
+
+
+
 # When logging, Pipes, ampersands and some other symbols have to be escaped
-# Variables do  not expand when  using single quotes.  Escape them manually
+# Variables do not expand when using single quotes.
 function log {
     $Command = "$args"
     $e = [char]27
