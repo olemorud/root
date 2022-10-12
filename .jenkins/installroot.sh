@@ -39,7 +39,12 @@ if [ "$INCREMENTAL" = false ]; then
                 https://github.com/root-project/root.git /tmp/root/src
 else
     cd /tmp/root/src    || exit 1
-    git pull            || exit 1
+    if [ $(git rev-parse HEAD) = $(git rev-parse @{u}) ]; then
+        echo "Files are unchanged since last build, exiting"
+        exit 0
+    else
+        git pull || exit 1
+    fi
 fi
 
 cd /tmp/root/build || exit 1
