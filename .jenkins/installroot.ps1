@@ -34,12 +34,6 @@ Push-Location
 $global:ScriptLog = ""
 
 
-$env:PATH += ";C:\Users\stesting\AppData\Roaming\Python\Python310\Scripts"
-pip install --upgrade pip
-pip install numpy
-exit 123
-
-
 
 # When logging, Pipes, ampersands and some other symbols have to be escaped
 # Variables do not expand when using single quotes.
