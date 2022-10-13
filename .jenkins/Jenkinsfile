@@ -28,6 +28,11 @@ pipeline {
             defaultValue: true,
             description: 'Use previous build artifacts to speed up build'
         )
+        string(
+            name: 'OS_APPLICATION_CREDENTIAL_ID',
+            defaultValue: '885c175b2945454e8d1bb2e124c77c1d',
+            description: 'Openstack S3 credential ID'
+        )
         //string(
         //    name: 'BUILD_OPTIONS',
         //    defaultValue: '',
