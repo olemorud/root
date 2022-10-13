@@ -15,7 +15,7 @@ param(
     [string]$Branch = "latest-stable", # The github branch of ROOT to build
     [string]$Config = "Release",       # Debug, MinSizeRel, Optimized, Release, RelWithDebInfo
     [string]$Generator = "",           # The Generator used to build ROOT, `cmake --help` lists available generators
-    [string]$TargetArch = "x64",       # ARM, ARM64, Win32, x64
+    [string]$TargetArch = "Win32",     # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
     [string]$Workdir = "$HOME/ROOT",   # Where to download, setup and install ROOT
     [bool]$StubCMake = 0
@@ -24,6 +24,104 @@ $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
     "-A`"$TargetArch`"",
     "-Thost=`"$ToolchainVersion`""
+    "-Dalien=Off",
+    "-Darrow=Off",
+    "-Dasimage=On",
+    "-Dasserts=Off",
+    "-Dbuiltin_afterimage=On",
+    "-Dbuiltin_cfitsio=On",
+    "-Dbuiltin_cppzmq=Off",
+    "-Dbuiltin_davix=Off",
+    "-Dbuiltin_fftw3=Off",
+    "-Dbuiltin_freetype=On",
+    "-Dbuiltin_ftgl=On",
+    "-Dbuiltin_gl2ps=On",
+    "-Dbuiltin_glew=On",
+    "-Dbuiltin_gsl=Off",
+    "-Dbuiltin_lz4=On",
+    "-Dbuiltin_lzma=On",
+    "-Dbuiltin_nlohmannjson=On",
+    "-Dbuiltin_openssl=Off",
+    "-Dbuiltin_openui5=On",
+    "-Dbuiltin_pcre=On",
+    "-Dbuiltin_tbb=On",
+    "-Dbuiltin_unuran=On",
+    "-Dbuiltin_vc=Off",
+    "-Dbuiltin_vdt=Off",
+    "-Dbuiltin_veccore=Off",
+    "-Dbuiltin_xrootd=Off",
+    "-Dbuiltin_xxhash=On",
+    "-Dbuiltin_zeromq=Off",
+    "-Dbuiltin_zlib=On",
+    "-Dbuiltin_zstd=On",
+    "-Dcefweb=Off",
+    "-Dclad=On",
+    "-Dcocoa=Off",
+    "-Dcuda=Off",
+    "-Dcudnn=Off",
+    "-Ddaos=Off",
+    "-Ddataframe=On",
+    "-Ddavix=Off",
+    "-Ddcache=Off",
+    "-Ddev=Off",
+    "-Ddistcc=Off",
+    "-Dfcgi=Off",
+    "-Dfftw3=On",
+    "-Dfitsio=Off",
+    "-Dfortran=Off",
+    "-Dgdml=On",
+    "-Dgfal=Off",
+    "-Dgsl_shared=Off",
+    "-Dgviz=Off",
+    "-Dhttp=On",
+    "-Dimt=On",
+    "-Dlibcxx=Off",
+    "-Dmathmore=Off",
+    "-Dminuit2=On",
+    "-Dmlp=On",
+    "-Dmonalisa=Off",
+    "-Dmpi=Off",
+    "-Dmysql=Off",
+    "-Dodbc=Off",
+    "-Dopengl=On",
+    "-Doracle=Off",
+    "-Dpgsql=Off",
+    "-Dpyroot2=Off",
+    "-Dpyroot3=On",
+    "-Dpyroot=On",
+    "-Dpyroot_legacy=Off",
+    "-Dpythia6=Off",
+    "-Dpythia6_nolink=Off",
+    "-Dpythia8=Off",
+    "-Dqt5web=Off",
+    "-Dqt6web=Off",
+    "-Dr=Off",
+    "-Droofit=On",
+    "-Droofit_hs3_ryml=Off",
+    "-Droofit_multiprocess=Off",
+    "-Dshadowpw=Off",
+    "-Dspectrum=On",
+    "-Dsqlite=Off",
+    "-Dssl=Off",
+    "-Dtest_distrdf_dask=Off",
+    "-Dtest_distrdf_pyspark=Off",
+    "-Dtmva-cpu=On",
+    "-Dtmva-gpu=Off",
+    "-Dtmva-pymva=On",
+    "-Dtmva-rmva=Off",
+    "-Dtmva-sofie=Off",
+    "-Dtmva=On",
+    "-Dunuran=On",
+    "-During=Off",
+    "-Dvc=Off",
+    "-Dvdt=Off",
+    "-Dveccore=Off",
+    "-Dvecgeom=Off",
+    "-Dwin_broken_tests=Off",
+    "-Dx11=Off",
+    "-Dxml=Off",
+    "-Dxproofd=Off",
+    "-Dxrootd=Off"
 )
 if ($Generator) {
     $CMakeParams += "-G`"$Generator`""
@@ -127,7 +225,7 @@ if("$env:INCREMENTAL" -eq "true"){
 if(-Not ($StubCMake)){
     #$NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
     log Set-Location "$Workdir/build"
-    log cmake -Dalien=Off -Darrow=Off -Dasimage=On -Dasserts=Off -Dbuiltin_afterimage=On -Dbuiltin_cfitsio=On -Dbuiltin_cppzmq=Off -Dbuiltin_davix=Off -Dbuiltin_fftw3=Off -Dbuiltin_freetype=On -Dbuiltin_ftgl=On -Dbuiltin_gl2ps=On -Dbuiltin_glew=On -Dbuiltin_gsl=Off -Dbuiltin_lz4=On -Dbuiltin_lzma=On -Dbuiltin_nlohmannjson=On -Dbuiltin_openssl=Off -Dbuiltin_openui5=On -Dbuiltin_pcre=On -Dbuiltin_tbb=On -Dbuiltin_unuran=On -Dbuiltin_vc=Off -Dbuiltin_vdt=Off -Dbuiltin_veccore=Off -Dbuiltin_xrootd=Off -Dbuiltin_xxhash=On -Dbuiltin_zeromq=Off -Dbuiltin_zlib=On -Dbuiltin_zstd=On -Dcefweb=Off -Dclad=On -Dcocoa=Off -Dcuda=Off -Dcudnn=Off -Ddaos=Off -Ddataframe=On -Ddavix=Off -Ddcache=Off -Ddev=Off -Ddistcc=Off -Dfcgi=Off -Dfftw3=On -Dfitsio=Off -Dfortran=Off -Dgdml=On -Dgfal=Off -Dgsl_shared=Off -Dgviz=Off -Dhttp=On -Dimt=On -Dlibcxx=Off -Dmathmore=Off -Dminuit2=On -Dmlp=On -Dmonalisa=Off -Dmpi=Off -Dmysql=Off -Dodbc=Off -Dopengl=On -Doracle=Off -Dpgsql=Off -Dpyroot=On -Dpyroot2=Off -Dpyroot3=On -Dpyroot_legacy=Off -Dpythia6=Off -Dpythia6_nolink=Off -Dpythia8=Off -Dqt5web=Off -Dqt6web=Off -Dr=Off -Droofit=On -Droofit_hs3_ryml=Off -Droofit_multiprocess=Off -Dshadowpw=Off -Dspectrum=On -Dsqlite=Off -Dssl=Off -Dtest_distrdf_dask=Off -Dtest_distrdf_pyspark=Off -Dtmva=On -Dtmva-cpu=On -Dtmva-gpu=Off -Dtmva-pymva=On -Dtmva-rmva=Off -Dtmva-sofie=Off -Dunuran=On -During=Off -Dvc=Off -Dvdt=Off -Dveccore=Off -Dvecgeom=Off -Dwin_broken_tests=Off -Dx11=Off -Dxml=Off -Dxproofd=Off -Dxrootd=Off @CMakeParams "$Workdir/source/"
+    log cmake  @CMakeParams "$Workdir/source/"
     log cmake --build . --config "$Config" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
