@@ -128,7 +128,7 @@ if(-Not ($StubCMake)){
     #$NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
     log Set-Location "$Workdir/build"
     log cmake @CMakeParams "$Workdir/source/"
-    log cmake --build . --config "$Config" --parallel 8 --target install
+    log cmake --build . --config "$Config" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
