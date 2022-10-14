@@ -5,7 +5,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
 ARCHIVE_DIR="$HOME/rootci"
-doGenerate=$INCREMENTAL
+doGenerate= ! $INCREMENTAL
 mkdir -p $ARCHIVE_DIR
 
 
