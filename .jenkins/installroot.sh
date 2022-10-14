@@ -5,6 +5,7 @@
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
 ARCHIVE_DIR="$HOME/rootci"
+doGenerate=$INCREMENTAL
 mkdir -p $ARCHIVE_DIR
 
 
@@ -45,12 +46,13 @@ else
         exit 0
     else
         git pull || exit 1
+		doGenerate=true
     fi
 fi
 
 cd /tmp/root/build || exit 1
 
-$INCREMENTAL || cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
+$doGenerate || cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
 cmake --build /tmp/root/build --target install -- -j"$(nproc)" || exit 1
 
 
