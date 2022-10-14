@@ -53,7 +53,7 @@ fi
 cd /tmp/root/build || exit 1
 
 $doGenerate || cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
-cmake --build /tmp/root/build --target install -- -j"$(nproc)" || exit 1
+cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 
 
 
