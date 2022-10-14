@@ -52,7 +52,9 @@ fi
 
 cd /tmp/root/build || exit 1
 
-$doGenerate || cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
+if $doGenerate; then
+	cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
+fi
 cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 
 
