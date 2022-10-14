@@ -207,13 +207,19 @@ $ArchiveName += '.tar.gz'
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if("$env:INCREMENTAL" -eq "true"){
-    log @"
+    try {
+        log @"
 & "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
 "@
-    log tar xvf "$ArchiveName" -C '/'
-    log Set-Location "$Workdir/source"
-    log git pull
-} else {
+        log tar xvf "$ArchiveName" -C '/'
+        log Set-Location "$Workdir/source"
+        log git pull
+    } catch {
+        $env:INCREMENTAL="false"
+    }
+}
+
+if("$env:INCREMENTAL" -eq "false") {
     log git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
     log New-Item -ItemType Directory -Force -Path "$Workdir/build"
     log New-Item -ItemType Directory -Force -Path "$Workdir/install"
