@@ -30,7 +30,7 @@ pipeline {
         )
         string(
             name: 'OS_APPLICATION_CREDENTIAL_ID',
-            defaultValue: '885c175b2945454e8d1bb2e124c77c1d',
+            defaultValue: '96f241a33ace42fea78580557b9cfdc0',
             description: 'Openstack S3 credential ID'
         )
         //string(
