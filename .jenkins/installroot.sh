@@ -44,14 +44,14 @@ else
         exit 0
     else
         git pull || exit 1
-		doGenerate=true
+        doGenerate=true
     fi
 fi
 
 cd /tmp/root/build || exit 1
 
 if $doGenerate; then
-	cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
+    cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
 fi
 cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 
