@@ -28,11 +28,9 @@ if [ "$INCREMENTAL" = true ]; then
 fi
 
 if [ "$INCREMENTAL" = false ]; then
-    # Make needed dirs only if last step didn't run / failed
-    # (we don't want to update timestamps)
+    rm -rf /tmp/root/*
     mkdir -p /tmp/root/build
     mkdir -p /tmp/root/install
-    rm -rf /tmp/root/src
 
     git clone -b "$BRANCH" \
                 --single-branch \
