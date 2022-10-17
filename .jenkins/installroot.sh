@@ -17,6 +17,11 @@ pwd
 
 
 
+# Erase files from previous builds
+rm -rf /tmp/root/*
+
+
+
 # If incremental build, download and unpack previous build artifacts from S3
 if [ "$INCREMENTAL" = true ]; then
     cd $ARCHIVE_DIR || exit 1
@@ -28,7 +33,6 @@ if [ "$INCREMENTAL" = true ]; then
 fi
 
 if [ "$INCREMENTAL" = false ]; then
-    rm -rf /tmp/root/*
     mkdir -p /tmp/root/build
     mkdir -p /tmp/root/install
 
