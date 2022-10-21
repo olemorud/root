@@ -151,9 +151,9 @@ function log {
     }
     if($LASTEXITCODE -ne 0) {
         Write-Host "$e[1m$e[31m" # bold red
-        Write-Host "Expression above failed"
+        Write-Host "Expression above failed with error $LASTEXITCODE"
         Write-Host "$e[1m$e[31m" # reset
-        Exit $LASTEXITCODE
+        throw
     } else {
         Write-Host "$e[3m" # italic
         Write-Host "Finished expression in $Time"
@@ -161,12 +161,9 @@ function log {
     }
 }
 
-
-$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1" -Config $Config -CMakeParams $CMakeParams
-$ArchiveName += '.tar.gz'
-
-
-
+$ArchivePath = (& "$PSScriptRoot/s3win/getbuildname.ps1" -Config $Config -CMakeParams $CMakeParams) + ".tar.gz"
+$ArchiveBasedir = (Split-Path -Path "$ArchivePath") + "/"
+$ArchiveName = $ArchivePath.Split('/')[-1]
 
 
 # Print useful debug information
@@ -196,8 +193,8 @@ try {
 
 # Clear the workspace
 log @"
-if(Test-Path $Workdir){
-    Remove-Item $Workdir/* -Recurse -Force
+if(Test-Path "$Workdir"){
+    Remove-Item "$Workdir/*" -Recurse -Force
 } else {
     New-Item -ItemType Directory -Force -Path "$Workdir"
 }
@@ -233,30 +230,32 @@ if("$env:INCREMENTAL" -eq "false") {
 # Generate, build and install
 if(-Not ($StubCMake)){
     #$NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
+    log Push-Location
     log Set-Location "$Workdir/build"
     log cmake  @CMakeParams "$Workdir/source/"
     log cmake --build . --config "$Config" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
+    log Pop-Location
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'
     Write-Output "this is a generator file"  > "$Workdir/build/buildfile"
     Write-Output "this is an installed file" > "$Workdir/install/installedfile"
 }
 
-
+Set-Location $Workdir
 
 # Upload build artifacts to S3
 log @"
-if(Test-Path $ArchiveName){
-    Write-Host "Remove-Item $Workdir/$ArchiveName"
-    Remove-Item "$Workdir/$ArchiveName"
+if(Test-Path $ArchivePath){
+    Remove-Item "$ArchivePath"
 }
 "@
 
-log tar Pczf "$Workdir/$ArchiveName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+New-Item -ItemType Directory -Path $ArchiveBasedir
+log tar Pczf "./$ArchivePath" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
 try {
     log Set-Location "$Workdir"
-    log "`& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchiveName`""
+    log "`& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchivePath`""
 } catch {
     Write-Host $_
     Write-Host @'
