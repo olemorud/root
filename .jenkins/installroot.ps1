@@ -135,7 +135,6 @@ $global:ScriptLog = ""
 
 
 # When logging, Pipes, ampersands and some other symbols have to be escaped
-# Variables do not expand when using single quotes.
 function log {
     $Command = "$args"
     $e = [char]27
@@ -144,7 +143,7 @@ function log {
     Write-Host "$Command"
     Write-Host "$e[0m" # reset text
 
-    $global:ScriptLog += "`n$Command"
+    $global:ScriptLog += "`n`n$Command"
 
     $global:LASTEXITCODE = 0
     $Time = Measure-Command {
