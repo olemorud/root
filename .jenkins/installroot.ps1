@@ -163,7 +163,7 @@ function log {
 
 $ArchivePath = (& "$PSScriptRoot/s3win/getbuildname.ps1" -Config $Config -CMakeParams $CMakeParams) + ".tar.gz"
 $ArchiveBasedir = (Split-Path -Path "$ArchivePath") + "/"
-$ArchiveName = $ArchivePath.Split('/')[-1]
+# $ArchiveName = $ArchivePath.Split('/')[-1]
 
 
 # Print useful debug information
@@ -209,12 +209,13 @@ log Set-Location $Workdir
 if("$env:INCREMENTAL" -eq "true"){
     try {
         log @"
-& "$PSScriptRoot/s3win/download.ps1" "$ArchiveName"
+& "$PSScriptRoot/s3win/download.ps1" "$ArchivePath"
 "@
-        log tar xf "$ArchiveName" -C '/'
+        log tar xf "$ArchivePath" -C '/'
         log Set-Location "$Workdir/source"
         log git pull
     } catch {
+        Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means a previous build artifact doesn't exist)"
         $env:INCREMENTAL="false"
     }
 }
