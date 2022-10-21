@@ -162,6 +162,12 @@ function log {
 }
 
 
+$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1" -Config $Config -CMakeParams $CMakeParams
+$ArchiveName += '.tar.gz'
+
+
+
+
 
 # Print useful debug information
 Get-ChildItem env:* | Sort-Object name # dump env
@@ -198,8 +204,6 @@ if(Test-Path $Workdir){
 "@
 
 log Set-Location $Workdir
-$ArchiveName = & "$PSScriptRoot/s3win/getbuildname.ps1"
-$ArchiveName += '.tar.gz'
 
 
 
