@@ -13,7 +13,6 @@ installroot.ps1  -Generator        <Generator> `
 
 param(
     [string]$Branch = "latest-stable", # The github branch of ROOT to build
-    [string]$Config = "Release",       # Debug, MinSizeRel, Optimized, Release, RelWithDebInfo
     [string]$Generator = "",           # The Generator used to build ROOT, `cmake --help` lists available generators
     [string]$TargetArch = "Win32",     # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
@@ -161,7 +160,7 @@ function log {
     }
 }
 
-$ArchivePath = (& "$PSScriptRoot/s3win/getbuildname.ps1" -Config $Config -CMakeParams $CMakeParams) + ".tar.gz"
+$ArchivePath = (& "$PSScriptRoot/s3win/getbuildname.ps1" -CMakeParams $CMakeParams) + ".tar.gz"
 $ArchiveBasedir = (Split-Path -Path "$ArchivePath") + "/"
 # $ArchiveName = $ArchivePath.Split('/')[-1]
 

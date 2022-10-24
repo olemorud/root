@@ -2,10 +2,7 @@
 
 param(
     [Parameter(mandatory=$true)]
-    [string[]]$CMakeParams = @(""),
-
-    [Parameter(mandatory=$true)]
-    [string]$Config = ""
+    [string[]]$CMakeParams = @("")
 )
 
 $Timestamp = Get-Date -Format yyyy-MM-dd
@@ -22,5 +19,5 @@ $stream.Position = 0
 $Hash = (Get-FileHash -Algorithm SHA1 -InputStream $Stream).Hash.ToLower()
 
 
-return "$env:PLATFORM/$BRANCH/$Config/$Hash-$Timestamp"
+return "$env:PLATFORM/$BRANCH/$env:CONFIG/$Hash-$Timestamp"
 
