@@ -24,7 +24,7 @@ rm -rf /tmp/root/*
 
 # If incremental build, download and unpack previous build artifacts from S3
 if [ "$INCREMENTAL" = true ]; then
-    cd $ARCHIVE_DIR || exit 1
+    mkdir -p "$(dirname "$ARCHIVE_NAME")"
     "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
     if ! tar -xf "$ARCHIVE_NAME" -C /; then
@@ -41,21 +41,19 @@ if [ "$INCREMENTAL" = false ]; then
                 --depth 1 \
                 https://github.com/root-project/root.git /tmp/root/src
 else
-    cd /tmp/root/src    || exit 1
-    git fetch
+    git --git-dir=/tmp/root/src fetch
     if [ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ]; then
         echo "Files are unchanged since last build, exiting"
         exit 0
     else
-        git pull || exit 1
+        git --git-dir=/tmp/root/src pull || exit 1
         doGenerate=true
     fi
 fi
 
-cd /tmp/root/build || exit 1
 
 if $doGenerate; then
-    cmake -DCMAKE_INSTALL_PREFIX=/tmp/root/install /tmp/root/src/  || exit 1 # $OPTIONS
+    cmake -S /tmp/root/src -B /tmp/root/build -DCMAKE_INSTALL_PREFIX=/tmp/root/install || exit 1 # $OPTIONS
 fi
 cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 
@@ -66,7 +64,6 @@ echo "$(cat ${BASH_SOURCE[0]})"
 
 
 # Archive and upload build artifacts to S3
-cd $ARCHIVE_DIR || exit 1
 rm -f "$ARCHIVE_NAME"
 tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
 "$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"

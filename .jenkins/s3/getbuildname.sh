@@ -2,9 +2,8 @@
 
 # Usage: ./getbuildname.sh <config> <cmake options>
 
-config=$1
-optionsum=$(printf '%s' "$2" | cksum)
+optionsum=$(printf '%s' "$1" | sha1sum | cut -d ' ' -f 1)
 timestamp=$(date +%F)
 
 
-echo "$PLATFORM/$BRANCH/$config/$optionsum-$timestamp.tar.gz"
+echo "$PLATFORM/$BRANCH/$CONFIG/$optionsum-$timestamp.tar.gz"
