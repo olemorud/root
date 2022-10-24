@@ -1,6 +1,8 @@
 #!/bin/bash
 
 
+stubCMake=true
+
 # Setup environment
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
@@ -51,12 +53,16 @@ else
     fi
 fi
 
-
-if $doGenerate; then
-    cmake -S /tmp/root/src -B /tmp/root/build -DCMAKE_INSTALL_PREFIX=/tmp/root/install || exit 1 # $OPTIONS
+if ! $stubCMake; then
+    if $doGenerate; then
+        cmake -S /tmp/root/src -B /tmp/root/build -DCMAKE_INSTALL_PREFIX=/tmp/root/install || exit 1 # $OPTIONS
+    fi
+    cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
+else
+    echo "Stubbing CMake step, writing dummy files to /tmp/root/build and /tmp/root/src"
+    echo "build file" > /tmp/root/build/buildfile.txt
+    echo "install file" > /tmp/root/install/installfile.txt
 fi
-cmake --build /tmp/root/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
-
 
 
 # Print script for reproducing
