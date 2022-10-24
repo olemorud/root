@@ -233,7 +233,7 @@ if(-Not ($StubCMake)){
     log Push-Location
     log Set-Location "$Workdir/build"
     log cmake  @CMakeParams "$Workdir/source/"
-    log cmake --build . --config "$Config" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
+    log cmake --build . --config "$env:CONFIG" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
     log Pop-Location
 } else {
     Write-Host 'Stubbing CMake step, creating files ./build/buildfile and ./install/installedfile'

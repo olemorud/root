@@ -1,7 +1,7 @@
 #!/bin/bash
 
 
-stubCMake=true
+stubCMake=false
 
 # Setup environment
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
