@@ -11,7 +11,7 @@ mkdir -p $ARCHIVE_DIR
 
 # Print debugging info, enable tracing
 set -o xtrace
-env
+env | sort -i
 date
 pwd
 
