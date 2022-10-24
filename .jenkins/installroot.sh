@@ -65,10 +65,6 @@ else
 fi
 
 
-# Print script for reproducing
-echo "$(cat ${BASH_SOURCE[0]})"
-
-
 # Archive and upload build artifacts to S3
 rm -f "$ARCHIVE_NAME"
 tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
