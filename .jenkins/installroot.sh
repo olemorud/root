@@ -19,14 +19,14 @@ pwd
 
 
 
-# Erase files from previous builds
+# Erase files from previous builds and create subdir for build artifacts
 rm -rf /tmp/root/*
+mkdir -p "$(dirname "$ARCHIVE_NAME")"
 
 
 
 # If incremental build, download and unpack previous build artifacts from S3
 if [ "$INCREMENTAL" = true ]; then
-    mkdir -p "$(dirname "$ARCHIVE_NAME")"
     "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
 
     if ! tar -xf "$ARCHIVE_NAME" -C /; then
