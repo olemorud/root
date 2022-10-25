@@ -2,7 +2,7 @@
 
 # Usage: ./getbuildname.sh <config> <cmake options>
 
-optionsum=$(printf '%s' "$1" | sha1sum | cut -d ' ' -f 1)
+optionsum=$(printf '%s' "$1" | shasum | cut -d ' ' -f 1)
 timestamp=$(date +%F)
 
 
