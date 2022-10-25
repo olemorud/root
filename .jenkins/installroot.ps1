@@ -214,7 +214,7 @@ if("$env:INCREMENTAL" -eq "true"){
         log Set-Location "$Workdir/source"
         log git pull
     } catch {
-        Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means a previous build artifact doesn't exist)"
+        Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means previous build artifacts don't exist)"
         $env:INCREMENTAL="false"
     }
 }
