@@ -7,7 +7,7 @@ param(
 
 $Timestamp = Get-Date -Format yyyy-MM-dd
 
-# calculate a simple SHA1 of cmake options 🥲
+# Hashing as a Service (HaaS)
 $stream = [System.IO.MemoryStream]::new()
 $writer = [System.IO.StreamWriter]::new($stream)
 foreach ($value in $CMakeParams) {
