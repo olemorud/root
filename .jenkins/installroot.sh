@@ -4,11 +4,9 @@
 stubCMake=false
 
 # Setup environment
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
-ARCHIVE_NAME=$("$SCRIPT_DIR/s3/getbuildname.sh")
-ARCHIVE_DIR="$HOME/rootci"
-doGenerate= ! $INCREMENTAL
-mkdir -p $ARCHIVE_DIR
+this=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+archiveName=$("$this/s3/getbuildname.sh")
+doGenerate=!$INCREMENTAL
 
 
 # Print debugging info, enable tracing
@@ -21,15 +19,15 @@ pwd
 
 # Erase files from previous builds and create subdir for build artifacts
 rm -rf /tmp/root/*
-mkdir -p "$(dirname "$ARCHIVE_NAME")"
+mkdir -p "$(dirname "$archiveName")"
 
 
 
 # If incremental build, download and unpack previous build artifacts from S3
 if [ "$INCREMENTAL" = true ]; then
-    "$SCRIPT_DIR/s3/download.sh" "$ARCHIVE_NAME"
+    "$this/s3/download.sh" "$archiveName"
 
-    if ! tar -xf "$ARCHIVE_NAME" -C /; then
+    if ! tar -xf "$archiveName" -C /; then
         INCREMENTAL=false
     fi
 fi
@@ -66,8 +64,8 @@ fi
 
 
 # Archive and upload build artifacts to S3
-rm -f "$ARCHIVE_NAME"
-tar -Pczf "$ARCHIVE_NAME" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
-"$SCRIPT_DIR/s3/upload.sh" "$ARCHIVE_NAME"
+rm -f "$archiveName"
+tar -Pczf "$archiveName" /tmp/root/build/ /tmp/root/install/ /tmp/root/src/
+"$this/s3/upload.sh" "$archiveName"
 
 
