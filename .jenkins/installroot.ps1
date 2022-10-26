@@ -17,7 +17,7 @@ param(
     [string]$TargetArch = "Win32",     # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
     [string]$Workdir = "$HOME/ROOT",   # Where to download, setup and install ROOT
-    [bool]$StubCMake = 0
+    [bool]$StubCMake = 1
 )
 $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
