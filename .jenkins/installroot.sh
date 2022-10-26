@@ -87,6 +87,7 @@ fi
 
 
 # Archive and upload build artifacts to S3
+mkdir -p $(dirname "$uploadName")
 rm -f "$uploadName"
 tar -Pczf "$uploadName" /tmp/workspace/build/ /tmp/workspace/install/ /tmp/workspace/src/
 uploadArchive "$s3token" "$uploadName"
