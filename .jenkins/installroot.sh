@@ -3,7 +3,7 @@
 # shellcheck source=s3/utils.sh
 # shellcheck source=s3/auth.sh
 
-stubCMake=false
+stubCMake=true
 
 this=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 s3token=$("$this/s3/auth.sh")
