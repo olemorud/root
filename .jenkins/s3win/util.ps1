@@ -50,9 +50,9 @@ function SearchArchive( [String]$Token, [String]$Prefix )
     $Headers = @{ 'X-Auth-Token' = "$Token" }
 
     $ProgressPreference = 'SilentlyContinue'
-    $Results = Invoke-WebRequest     `
-        -Uri     "$Url"   `
-        -Method  'GET'    `
+    $Results = Invoke-WebRequest `
+        -Uri     "$Url" `
+        -Method  'GET' `
         -Headers $Headers
     
     return $Results

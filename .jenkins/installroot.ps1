@@ -127,21 +127,22 @@ if ($Generator) {
 }
 Push-Location
 
+
+# token to authenticate to s3 API
+$Token = & "$PSScriptRoot/s3win/auth.ps1"
+Write-Host $Token
+
+
 # defines log, UploadArchive(), DownloadArchive(), SearchArchive(), GetArchiveNamePrefix(), [String]ScriptLog
 . "$PSScriptRoot/s3win/util.ps1"
 
-# token to authenticate to s3 API
-$Token = "$PSScriptRoot/s3win/auth.ps1"
 
-
-
-
-$ArchivePrefix = GetArchiveNamePrefix -CMakeParams $CMakeParams
-$DownloadName = (SearchArchive -Token $Token -Prefix $ArchivePrefix).Content.Split([Environment]::NewLine) | Select-Object -First 1
-$ArchiveBasedir = (Split-Path -Path "$ArchivePrefix") + "/"
+$ArchiveParentPath = GetArchiveNamePrefix -CMakeParams $CMakeParams
+$DownloadName = (SearchArchive -Token $Token -Prefix $ArchiveParentPath).Content.Split([Environment]::NewLine) | Select-Object -First 1
+$UploadName = $ArchiveParentPath + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
 
 if($DownloadName -eq ""){
-    $env:INCREMENTAL = false
+    $env:INCREMENTAL = $false
 }
 
 # Print useful debug information
@@ -184,7 +185,7 @@ log Set-Location $Workdir
 
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
-if("$env:INCREMENTAL" -eq "true"){
+if("$env:INCREMENTAL" -eq $true){
     try {
         log DownloadArchive -Token $Token -Filename "$ArchivePath"
         log tar xf "$ArchivePath" -C '/'
@@ -192,11 +193,11 @@ if("$env:INCREMENTAL" -eq "true"){
         log git pull
     } catch {
         Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means previous build artifacts don't exist)"
-        $env:INCREMENTAL="false"
+        $env:INCREMENTAL=$false
     }
 }
 
-if("$env:INCREMENTAL" -eq "false") {
+if("$env:INCREMENTAL" -eq $false) {
     log git clone --branch $Branch --depth=1 "https://github.com/root-project/root.git" "$Workdir/source"
     log New-Item -ItemType Directory -Force -Path "$Workdir/build"
     log New-Item -ItemType Directory -Force -Path "$Workdir/install"
@@ -218,21 +219,20 @@ if(-Not ($StubCMake)){
     Write-Output "this is an installed file" > "$Workdir/install/installedfile"
 }
 
-Set-Location $Workdir
+log Set-Location $Workdir
 
 # Upload build artifacts to S3
 log @"
-if(Test-Path $ArchivePath){
-    Remove-Item "$ArchivePath"
+if(Test-Path $UploadName){
+    Remove-Item "$UploadName"
 }
 "@
 
-New-Item -ItemType Directory -Path $ArchiveBasedir
-log tar Pczf "./$ArchivePath" "$Workdir/source" "$Workdir/build" "$Workdir/install"
+log New-Item -ItemType Directory -Path $ArchiveParentPath
+log tar Pczf "./$UploadName" "$Workdir/source" "$Workdir/build" "$Workdir/install"
 
 try {
-    log Set-Location "$Workdir"
-    log UploadArchive -Token $Token -Filename "$ArchivePath"
+    log UploadArchive -Token $Token -Filename "$UploadName"
 } catch {
     Write-Host $_
     Write-Host @'
@@ -258,5 +258,3 @@ $global:ScriptLog
 "@
 
 Pop-Location
-
-# + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
