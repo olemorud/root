@@ -131,7 +131,7 @@ Push-Location
 . "$PSScriptRoot/s3win/util.ps1"
 
 # token to authenticate to s3 API
-$Token= & "$PSScriptRoot/auth.ps1"
+$Token= & "$PSScriptRoot/s3win/auth.ps1"
 
 
 

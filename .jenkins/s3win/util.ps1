@@ -46,13 +46,13 @@ function UploadArchive( [String]$Token, [String]$Filename )
 function SearchArchive( [String]$Token, [String]$Prefix )
 {
 
-    $Url='https://s3.cern.ch/swift/v1/ROOT-build-artifacts'
+    $Url="https://s3.cern.ch/swift/v1/ROOT-build-artifacts?prefix=$Prefix"
     $Headers = @{ 'X-Auth-Token' = "$Token" }
 
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest                  `
-        -Uri     "$Url?prefix=$Prefix" `
-        -Method  'GET'                 `
+    Invoke-WebRequest     `
+        -Uri     "$Url"   `
+        -Method  'GET'    `
         -Headers $Headers
 }
 
@@ -64,7 +64,7 @@ function DownloadArchive( [String]$Token, [String]$Filename )
     $Headers = @{ 'X-Auth-Token' = "$Token" }
 
     $ProgressPreference = 'SilentlyContinue'
-    $Results = Invoke-WebRequest             `
+    $Results = Invoke-WebRequest  `
         -Uri     "$Url/$Filename" `
         -Method  'GET'            `
         -OutFile "$Filename"      `
