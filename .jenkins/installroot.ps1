@@ -131,13 +131,13 @@ Push-Location
 . "$PSScriptRoot/s3win/util.ps1"
 
 # token to authenticate to s3 API
-$Token= & "$PSScriptRoot/s3win/auth.ps1"
+$Token = "$PSScriptRoot/s3win/auth.ps1"
 
 
 
 
 $ArchivePrefix = GetArchiveNamePrefix -CMakeParams $CMakeParams
-$DownloadName = (SearchArchive -Token $Token -Prefix $ArchivePrefix).Split([Environment]::NewLine) | Select-Object -First 1
+$DownloadName = (SearchArchive -Token $Token -Prefix $ArchivePrefix).Content.Split([Environment]::NewLine) | Select-Object -First 1
 $ArchiveBasedir = (Split-Path -Path "$ArchivePrefix") + "/"
 
 if($DownloadName -eq ""){

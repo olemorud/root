@@ -50,10 +50,12 @@ function SearchArchive( [String]$Token, [String]$Prefix )
     $Headers = @{ 'X-Auth-Token' = "$Token" }
 
     $ProgressPreference = 'SilentlyContinue'
-    Invoke-WebRequest     `
+    $Results = Invoke-WebRequest     `
         -Uri     "$Url"   `
         -Method  'GET'    `
         -Headers $Headers
+    
+    return $Results
 }
 
 
@@ -64,20 +66,16 @@ function DownloadArchive( [String]$Token, [String]$Filename )
     $Headers = @{ 'X-Auth-Token' = "$Token" }
 
     $ProgressPreference = 'SilentlyContinue'
-    $Results = Invoke-WebRequest  `
+    Invoke-WebRequest  `
         -Uri     "$Url/$Filename" `
         -Method  'GET'            `
         -OutFile "$Filename"      `
         -Headers $Headers
-
-    return $Results
 }
 
 
 
 function GetArchiveNamePrefix( [string[]]$CMakeParams = @("") ) {
-    $Timestamp = Get-Date -Format yyyy-MM-dd
-
     # Hashing as a Service (HaaS)
     $stream = [System.IO.MemoryStream]::new()
     $writer = [System.IO.StreamWriter]::new($stream)
