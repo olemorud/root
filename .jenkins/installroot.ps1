@@ -128,7 +128,7 @@ if ($Generator) {
 Push-Location
 
 # defines log, UploadArchive(), DownloadArchive(), SearchArchive(), GetArchiveNamePrefix(), [String]ScriptLog
-. "$PSScriptRoot/util.ps1"
+. "$PSScriptRoot/s3win/util.ps1"
 
 # token to authenticate to s3 API
 $Token= & "$PSScriptRoot/auth.ps1"
