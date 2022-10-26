@@ -15,7 +15,7 @@ downloadArchive() {
 	# someone could maybe make a file called
 	# a/../../../../bin/sh
 	# to inject a virus but i havent tested this
-	mkdir -p `dirname "$filename"`
+	mkdir -p $(dirname "$filename")
 
 	curl \
 		"$url/$filename" \
