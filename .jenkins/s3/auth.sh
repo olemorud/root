@@ -3,11 +3,11 @@
 # This program prints s3 token to stdout.
 # It is dependent on OpenStack application credentials saved as rc.sh.
 
-SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
+this=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 
-source "$SCRIPT_DIR/rc.sh"
+source "$this/rc.sh"
 
-read -r -d '' REQUEST << EOF
+read -r -d '' request << EOF
 	{
 		"auth": {
 			"identity": {
@@ -26,6 +26,6 @@ curl --verbose \
 	 --silent \
 	 -X POST "$OS_AUTH_URL/auth/tokens?nocatalog" \
 	 -H "Content-Type: application/json" \
-	 -d "$REQUEST" \
+	 -d "$request" \
 2>/dev/stdout | grep X-Subject-Token: | cut -d" " -f3 | tr -d "\r\n\0 "
 
