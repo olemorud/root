@@ -35,18 +35,18 @@ downloadAndGitPull() {
     local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
     downloadArchive "$s3token" "$downloadName"
     tar -xf "$downloadName" -C / || return 1
-    ls /tmp/workspace/src
+    ls -la /tmp/workspace/src
     # ^^ tar will fail if any previous step fails
 
-    git --git-dir=/tmp/workspace/src fetch
+    git -C /tmp/workspace/src fetch
 
     # shellcheck disable=SC1083
-    if [ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ]; then
+    if [ "$(git -C /tmp/workspace/src rev-parse HEAD)" = "$(git -C /tmp/workspace/src rev-parse @{u})" ]; then
         echo "Files are unchanged since last build, exiting"
         exit 0
     fi
 
-    git --git-dir=/tmp/workspace/src pull || return 1
+    git -C /tmp/workspace/src pull || return 1
     doGenerate=true
 }
 
