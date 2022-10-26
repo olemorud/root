@@ -11,7 +11,7 @@ doGenerate=!$INCREMENTAL
 
 optionsum=$(printf '%s' "$OPTIONS" | shasum | cut -d ' ' -f 1)
 archiveNamePrefix="$PLATFORM/$BRANCH/$CONFIG/$optionsum/"
-uploadName="$archiveNamePrefix$(date +%F)"
+uploadName="$archiveNamePrefix$(date +%F).tar.gz"
 
 
 # utils.sh defines downloadArchive(), getArchiveNamePrefix(), searchArchive(), uploadArchive()
