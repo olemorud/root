@@ -31,8 +31,6 @@ if [ -z "$downloadName" ]; then
     INCREMENTAL=false
 fi
 
-exit 0
-
 
 cloneFromGit() {
     mkdir -p /tmp/workspace/build
