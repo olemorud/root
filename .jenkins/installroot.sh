@@ -31,9 +31,11 @@ cloneFromGit() {
 }
 
 downloadAndGitPull() {
-    downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
+    rm -rf /tmp/workspace/*
+    local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
     downloadArchive "$s3token" "$downloadName"
-    tar -xf "$archiveNamePrefix" -C / || return 1
+    tar -xf "$downloadName" -C / || return 1
+    ls /tmp/workspace/src
     # ^^ tar will fail if any previous step fails
 
     git --git-dir=/tmp/workspace/src fetch
