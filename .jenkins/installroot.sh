@@ -7,7 +7,7 @@ stubCMake=false
 
 this=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 s3token=$("$this/s3/auth.sh")
-doGenerate=!$INCREMENTAL
+doGenerate=! $INCREMENTAL
 
 optionsum=$(printf '%s' "$OPTIONS" | shasum | cut -d ' ' -f 1)
 archiveNamePrefix="$PLATFORM/$BRANCH/$CONFIG/$optionsum/"
