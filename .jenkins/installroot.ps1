@@ -125,45 +125,24 @@ $CMakeParams = @(
 if ($Generator) {
     $CMakeParams += "-G`"$Generator`""
 }
-
-
 Push-Location
 
-$global:ScriptLog = ""
+# defines log, UploadArchive(), DownloadArchive(), SearchArchive(), GetArchiveNamePrefix(), [String]ScriptLog
+. "$PSScriptRoot/util.ps1"
+
+# token to authenticate to s3 API
+$Token= & "$PSScriptRoot/auth.ps1"
 
 
 
-# When logging, Pipes, ampersands and some other symbols have to be escaped
-function log {
-    $Command = "$args"
-    $e = [char]27
 
-    Write-Host "$e[1m" # bold text
-    Write-Host "$Command"
-    Write-Host "$e[0m" # reset text
+$ArchivePrefix = GetArchiveNamePrefix -CMakeParams $CMakeParams
+$DownloadName = (SearchArchive -Token $Token -Prefix $ArchivePrefix).Split([Environment]::NewLine) | Select-Object -First 1
+$ArchiveBasedir = (Split-Path -Path "$ArchivePrefix") + "/"
 
-    $global:ScriptLog += "`n`n$Command"
-
-    $global:LASTEXITCODE = 0
-    $Time = Measure-Command {
-        Invoke-Expression -Command "$Command" | Out-Default
-    }
-    if($LASTEXITCODE -ne 0) {
-        Write-Host "$e[1m$e[31m" # bold red
-        Write-Host "Expression above failed with error $LASTEXITCODE"
-        Write-Host "$e[1m$e[31m" # reset
-        throw
-    } else {
-        Write-Host "$e[3m" # italic
-        Write-Host "Finished expression in $Time"
-        Write-Host "$e[0m" # reset
-    }
+if($DownloadName -eq ""){
+    $env:INCREMENTAL = false
 }
-
-$ArchivePath = (& "$PSScriptRoot/s3win/getbuildname.ps1" -CMakeParams $CMakeParams) + ".tar.gz"
-$ArchiveBasedir = (Split-Path -Path "$ArchivePath") + "/"
-# $ArchiveName = $ArchivePath.Split('/')[-1]
-
 
 # Print useful debug information
 Get-ChildItem env:* | Sort-Object name # dump env
@@ -174,8 +153,8 @@ Get-Date
 # Test S3 connection
 try {
     Write-Output "Hello World" > helloworld.txt
-    & "$PSScriptRoot/s3win/upload.ps1" "helloworld.txt" | Out-Null
-    & "$PSScriptRoot/s3win/download.ps1" "helloworld.txt" | Out-Null
+    UploadArchive -Token $Token -Filename "helloworld.txt" | Out-Null
+    DownloadArchive -Token $Token -Filename "helloworld.txt" | Out-Null
 } catch {
     Write-Host $_
     Write-Host @'
@@ -207,9 +186,7 @@ log Set-Location $Workdir
 # If not, download entire source from git
 if("$env:INCREMENTAL" -eq "true"){
     try {
-        log @"
-& "$PSScriptRoot/s3win/download.ps1" "$ArchivePath"
-"@
+        log DownloadArchive -Token $Token -Filename "$ArchivePath"
         log tar xf "$ArchivePath" -C '/'
         log Set-Location "$Workdir/source"
         log git pull
@@ -255,7 +232,7 @@ log tar Pczf "./$ArchivePath" "$Workdir/source" "$Workdir/build" "$Workdir/insta
 
 try {
     log Set-Location "$Workdir"
-    log "`& `"$PSScriptRoot/s3win/upload.ps1`" `"$ArchivePath`""
+    log UploadArchive -Token $Token -Filename "$ArchivePath"
 } catch {
     Write-Host $_
     Write-Host @'
@@ -281,3 +258,5 @@ $global:ScriptLog
 "@
 
 Pop-Location
+
+# + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
