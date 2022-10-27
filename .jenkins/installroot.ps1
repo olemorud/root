@@ -17,7 +17,7 @@ param(
     [string]$TargetArch = "Win32",     # ARM, ARM64, Win32, x64
     [string]$ToolchainVersion = "x64", # Version of host tools to use, e.g. x64 or Win32.
     [string]$Workdir = "$HOME/ROOT",   # Where to download, setup and install ROOT
-    [bool]$StubCMake = 1
+    [bool]$StubCMake = 0
 )
 $CMakeParams = @(
     "-DCMAKE_INSTALL_PREFIX=`"$Workdir/install`"",
@@ -140,7 +140,9 @@ Write-Host $Token
 $ArchiveParentPath = GetArchiveNamePrefix -CMakeParams $CMakeParams
 $DownloadName = (SearchArchive -Token $Token -Prefix $ArchiveParentPath).Content.Split([Environment]::NewLine) | Select-Object -First 1
 $UploadName = $ArchiveParentPath + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
-
+Write-Host "ArchiveParentPath: $ArchiveParentPath"
+Write-Host "Downloadname: $DownloadName"
+Write-Host "UploadName: $UploadName"
 if($DownloadName -eq ""){
     $env:INCREMENTAL = $false
 }
@@ -182,15 +184,16 @@ if(Test-Path "$Workdir"){
 log Set-Location $Workdir
 
 
-
 # Download and extract previous build artifacts if incremental
 # If not, download entire source from git
 if("$env:INCREMENTAL" -eq $true){
     try {
-        log DownloadArchive -Token $Token -Filename "$ArchivePath"
-        log tar xf "$ArchivePath" -C '/'
+        log DownloadArchive -Token $Token -Filename "$DownloadName"
+        log tar xf "$DownloadName" -C '/'
+        log Push-Location
         log Set-Location "$Workdir/source"
         log git pull
+        log Pop-Location
     } catch {
         Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means previous build artifacts don't exist)"
         $env:INCREMENTAL=$false

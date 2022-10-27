@@ -33,6 +33,8 @@ function UploadArchive( [String]$Token, [String]$Filename )
 
     $Url='https://s3.cern.ch/swift/v1/ROOT-build-artifacts'
     $Headers = @{ 'X-Auth-Token' = "$Token" }
+    
+    Write-Host "Attempting to upload to $Url/$Filename ..."
 
     $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest             `
@@ -64,6 +66,13 @@ function DownloadArchive( [String]$Token, [String]$Filename )
 
     $Url='https://s3.cern.ch/swift/v1/ROOT-build-artifacts'
     $Headers = @{ 'X-Auth-Token' = "$Token" }
+
+    Write-Host "Attempting to download $Url/$Filename ..."
+
+    $ParentDir = Split-Path -Path $Filename
+    if($ParentDir){
+        New-Item -ItemType Directory -Path $ParentDir
+    }
 
     $ProgressPreference = 'SilentlyContinue'
     Invoke-WebRequest  `
