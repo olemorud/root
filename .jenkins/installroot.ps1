@@ -210,10 +210,13 @@ if("$env:INCREMENTAL" -eq $false) {
 
 # Generate, build and install
 if(-Not ($StubCMake)){
-    #$NCores = (Get-CimInstance –ClassName Win32_Processor).NumberOfLogicalProcessors
     log Push-Location
     log Set-Location "$Workdir/build"
-    log cmake  @CMakeParams "$Workdir/source/"
+
+    if ( $env:INCREMENTAL -eq $false ) {
+        log cmake  @CMakeParams "$Workdir/source/"
+    }
+
     log cmake --build . --config "$env:CONFIG" --parallel "$env:NUMBER_OF_PROCESSORS" --target install
     log Pop-Location
 } else {
