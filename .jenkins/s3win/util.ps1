@@ -71,7 +71,7 @@ function DownloadArchive( [String]$Token, [String]$Filename )
 
     $ParentDir = Split-Path -Path $Filename
     if($ParentDir){
-        New-Item -ItemType Directory -Path $ParentDir
+        New-Item -ItemType Directory -Path $ParentDir | Out-Null
     }
 
     $ProgressPreference = 'SilentlyContinue'
