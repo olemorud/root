@@ -13,6 +13,7 @@ uploadName="$archiveNamePrefix$(date +%F).tar.gz"
 
 mkdir /tmp/workspace/
 cd /tmp/workspace/
+rm -rf /tmp/workspace/*
 
 # utils.sh defines downloadArchive(), getArchiveNamePrefix(), searchArchive(), uploadArchive()
 source "$this/s3/utils.sh"
@@ -33,22 +34,25 @@ cloneFromGit() {
 }
 
 downloadAndGitPull() {
-    rm -rf /tmp/workspace/*
-    local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
-    downloadArchive "$s3token" "$downloadName"
-    tar -xf "$downloadName" -C / || return 1
-    ls -la /tmp/workspace/src
-    # ^^ tar will fail if any previous step fails
+    cd /tmp/workspace
+        local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
+        downloadArchive "$s3token" "$downloadName"
+        tar -xf "$downloadName" -C / || return 1
+        ls -la /tmp/workspace/src
+        # ^^ tar will fail if any previous step fails
+    cd -
 
-    git -C /tmp/workspace/src fetch
+    cd /tmp/workspace/src
+        git fetch
 
-    # shellcheck disable=SC1083
-    if [ "$(git -C /tmp/workspace/src rev-parse HEAD)" = "$(git -C /tmp/workspace/src rev-parse @{u})" ]; then
-        echo "Files are unchanged since last build, exiting"
-        exit 0
-    fi
+        # shellcheck disable=SC1083
+        if [ "$(git -C /tmp/workspace/src rev-parse HEAD)" = "$(git -C /tmp/workspace/src rev-parse @{u})" ]; then
+            echo "Files are unchanged since last build, exiting"
+            exit 0
+        fi
 
-    git -C /tmp/workspace/src pull || return 1
+        git || return 1
+    cd -
 }
 
 
@@ -60,7 +64,6 @@ pwd
 
 
 # fetch files
-rm -rf /tmp/workspace/*
 if $INCREMENTAL; then
     downloadAndGitPull || cloneFromGit || exit 0
 else
