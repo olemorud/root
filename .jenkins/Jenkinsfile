@@ -46,8 +46,8 @@ pipeline {
     }
 
     environment {
-        JENKINS_USER_ID: '14806'
-        JENKINS_GROUP_ID: '2735'
+        JENKINS_USER_ID  = '14806'
+        JENKINS_GROUP_ID = '2735'
     }
 
     stages {

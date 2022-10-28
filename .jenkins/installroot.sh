@@ -7,7 +7,6 @@ stubCMake=false
 
 this=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 s3token=$("$this/s3/auth.sh")
-doGenerate=! $INCREMENTAL
 cmakeOptionsHash=$(printf '%s' "$OPTIONS" | shasum | cut -d ' ' -f 1)
 archiveNamePrefix="$PLATFORM/$BRANCH/$CONFIG/$cmakeOptionsHash/"
 uploadName="$archiveNamePrefix$(date +%F).tar.gz"
@@ -47,7 +46,6 @@ downloadAndGitPull() {
     fi
 
     git -C /tmp/workspace/src pull || return 1
-    doGenerate=true
 }
 
 
@@ -69,7 +67,7 @@ fi
 
 # generate+build
 if ! $stubCMake; then
-    if $doGenerate; then
+    if ! $INCREMENTAL; then
         cmake -S /tmp/workspace/src -B /tmp/workspace/build -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install $OPTIONS || exit 1
     fi
     cmake --build /tmp/workspace/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
