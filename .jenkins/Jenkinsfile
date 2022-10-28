@@ -76,7 +76,7 @@ pipeline {
                     args """
                         --net=host
                         --pull=always
-                        -u ${JENKINS_USER_ID}:${JENKINS_GROUP_ID}
+                        -u 0:0
                         -e BRANCH=${params.BRANCH}
                     """
                 }
