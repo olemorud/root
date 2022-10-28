@@ -48,10 +48,11 @@ downloadAndGitPull() {
         # shellcheck disable=SC1083
         if [ "$(git -C /tmp/workspace/src rev-parse HEAD)" = "$(git -C /tmp/workspace/src rev-parse @{u})" ]; then
             echo "Files are unchanged since last build, exiting"
+            cd -
             exit 0
         fi
 
-        git || return 1
+        git merge FETCH_HEAD || return 1
     cd -
 }
 

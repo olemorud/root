@@ -86,13 +86,8 @@ pipeline {
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
                     sh '''
-                        rm -rf *
                         ls -l
-                        locationStack=$(pwd)
-                        echo $locationStack
                         chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh
-                        cd "$locationStack"
-                        ls -l
                     '''
                 }
             }
