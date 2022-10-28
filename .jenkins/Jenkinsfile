@@ -45,6 +45,11 @@ pipeline {
         //)
     }
 
+    environment {
+        JENKINS_USER_ID: '14806'
+        JENKINS_GROUP_ID: '2735'
+    }
+
     stages {
         stage('Set display name'){
             steps {
@@ -68,12 +73,12 @@ pipeline {
                 docker {
                     label 'docker-host-noafs'
                     image "ghcr.io/olemorud/${params.PLATFORM}:buildready"
-                    args '''
+                    args """
                         --net=host
                         --pull=always
-                        -u=root
+                        -u ${JENKINS_USER_ID}:${JENKINS_GROUP_ID}
                         -e BRANCH=${params.BRANCH}
-                    '''
+                    """
                 }
             }
             steps {
