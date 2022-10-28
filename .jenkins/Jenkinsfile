@@ -86,6 +86,7 @@ pipeline {
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
                     sh '''
+                        rm *
                         ls -l
                         locationStack=$(pwd)
                         echo $locationStack
