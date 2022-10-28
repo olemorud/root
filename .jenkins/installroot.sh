@@ -11,6 +11,8 @@ cmakeOptionsHash=$(printf '%s' "$OPTIONS" | shasum | cut -d ' ' -f 1)
 archiveNamePrefix="$PLATFORM/$BRANCH/$CONFIG/$cmakeOptionsHash/"
 uploadName="$archiveNamePrefix$(date +%F).tar.gz"
 
+cd /tmp/
+
 # utils.sh defines downloadArchive(), getArchiveNamePrefix(), searchArchive(), uploadArchive()
 source "$this/s3/utils.sh"
 
