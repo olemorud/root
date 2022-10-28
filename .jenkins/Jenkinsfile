@@ -76,9 +76,8 @@ pipeline {
                     args """
                         --net=host
                         --pull=always
-                        -u 0:0
+                        -u=root
                         -e BRANCH=${params.BRANCH}
-                        -w /tmp/workspace/
                     """
                 }
             }
@@ -86,7 +85,13 @@ pipeline {
                 withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
-                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+                    sh '''
+                        locationStack=$(pwd)
+                        echo $locationStack
+                        chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh
+                        cd "$locationStack"
+                        ls -l
+                    '''
                 }
             }
             post { failure {
