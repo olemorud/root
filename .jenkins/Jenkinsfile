@@ -78,6 +78,7 @@ pipeline {
                         --pull=always
                         -u 0:0
                         -e BRANCH=${params.BRANCH}
+                        -w /tmp/workspace/
                     """
                 }
             }
