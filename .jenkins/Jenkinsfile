@@ -109,7 +109,7 @@ pipeline {
                 withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
                 ) {
-                    sh 'chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
+                    sh 'export PATH=$PATH:/usr/local/bin && chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh'
                 }
             }
             post { failure {

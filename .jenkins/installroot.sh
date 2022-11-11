@@ -37,7 +37,7 @@ downloadAndGitPull() {
     cd /tmp/workspace
         local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
         downloadArchive "$s3token" "$downloadName"
-        tar -xf "$downloadName" -C / || return 1
+        tar -xf "$downloadName"  || return 1
         ls -la /tmp/workspace/src
         # ^^ tar will fail if any previous step fails
     cd -
@@ -86,9 +86,9 @@ fi
 
 
 # archive and upload
-mkdir -p $(dirname "$uploadName")
-rm -f "$uploadName"
-tar -Pczf "$uploadName" /tmp/workspace/build/ /tmp/workspace/install/ /tmp/workspace/src/
-uploadArchive "$s3token" "$uploadName"
-
-
+cd /tmp/workspace/
+    mkdir -p $(dirname "$uploadName")
+    rm -f "$uploadName"
+    tar -Pczf "$uploadName" build install src
+    uploadArchive "$s3token" "$uploadName"
+cd -
