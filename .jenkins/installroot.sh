@@ -89,6 +89,6 @@ fi
 cd /tmp/workspace/
     mkdir -p $(dirname "$uploadName")
     rm -f "$uploadName"
-    tar -Pczf "$uploadName" build install src
+    tar -czf "$uploadName" build install src
     uploadArchive "$s3token" "$uploadName"
 cd -
