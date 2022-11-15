@@ -15,7 +15,8 @@ mkdir /tmp/workspace/
 cd /tmp/workspace/
 rm -rf /tmp/workspace/*
 
-# utils.sh defines downloadArchive(), getArchiveNamePrefix(), searchArchive(), uploadArchive()
+# utils.sh defines downloadArchive(), getArchiveNamePrefix(), searchArchive(), 
+# uploadArchive()
 source "$this/s3/utils.sh"
 
 cloneFromGit() {
@@ -25,17 +26,18 @@ cloneFromGit() {
     mkdir -p /tmp/workspace/install
 
     git clone -b "$BRANCH" \
-                    --single-branch \
-                    --depth 1 \
-                    https://github.com/root-project/root.git \
-                    /tmp/workspace/src
+              --single-branch \
+              --depth 1 \
+              https://github.com/root-project/root.git \
+              /tmp/workspace/src
     
     return $?
 }
 
 downloadAndGitPull() {
     cd /tmp/workspace
-        local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | tail -n 1)
+        local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" \
+                             | tail -n 1)
         downloadArchive "$s3token" "$downloadName"
         tar -xf "$downloadName"  || return 1
         # ^^ tar will fail if any previous step fails
@@ -46,7 +48,7 @@ downloadAndGitPull() {
         git fetch
 
         # shellcheck disable=SC1083
-        if [ "$(git -C /tmp/workspace/src rev-parse HEAD)" = "$(git -C /tmp/workspace/src rev-parse @{u})" ]; then
+        if [ "$(git rev-parse HEAD)" = "$(git rev-parse @{u})" ]; then
             echo "Files are unchanged since last build, exiting"
             cd -
             exit 0
@@ -75,12 +77,19 @@ fi
 # generate+build
 if ! $stubCMake; then
     if ! $INCREMENTAL; then
-        cmake -S /tmp/workspace/src -B /tmp/workspace/build -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install $OPTIONS || exit 1
+        cmake -S /tmp/workspace/src \
+              -B /tmp/workspace/build \
+              -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install $OPTIONS || exit 1
     fi
-    cmake --build /tmp/workspace/build --target install -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
+
+    cmake --build /tmp/workspace/build \
+          --target install \
+          -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 else
-    echo "Stubbing CMake step, writing dummy files to /tmp/workspace/build and /tmp/workspace/src"
-    echo "build file" > /tmp/workspace/build/buildfile.txt
+    # Stubbing CMake lets you test changes to the script without
+    # waiting 30 minutes for CMake to build ROOT
+    echo "Stubbing CMake step"
+    echo "build file"   > /tmp/workspace/build/buildfile.txt
     echo "install file" > /tmp/workspace/install/installfile.txt
 fi
 
@@ -89,6 +98,10 @@ fi
 cd /tmp/workspace/
     mkdir -p $(dirname "$uploadName")
     rm -f "$uploadName"
-    tar -czf "$uploadName" build install src
+    tar -czf "$uploadName" build install src 
+
+    # Even though CMake is completely dependent on absolute paths, I have to do
+    # this relative path terribleness. There is no portable syntax with 
+    # absolute paths
     uploadArchive "$s3token" "$uploadName"
 cd -
