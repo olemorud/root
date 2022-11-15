@@ -38,8 +38,8 @@ downloadAndGitPull() {
         local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
         downloadArchive "$s3token" "$downloadName"
         tar -xf "$downloadName"  || return 1
-        ls -la /tmp/workspace/src
         # ^^ tar will fail if any previous step fails
+        ls -la ./src
     cd -
 
     cd /tmp/workspace/src
