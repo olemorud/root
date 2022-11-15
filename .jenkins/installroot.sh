@@ -35,7 +35,7 @@ cloneFromGit() {
 
 downloadAndGitPull() {
     cd /tmp/workspace
-        local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | head -n 1)
+        local downloadName=$(searchArchive "$s3token" "$archiveNamePrefix" | tail -n 1)
         downloadArchive "$s3token" "$downloadName"
         tar -xf "$downloadName"  || return 1
         # ^^ tar will fail if any previous step fails
