@@ -41,7 +41,9 @@ downloadAndGitPull() {
         downloadArchive "$s3token" "$downloadName"
         tar -xf "$downloadName"  || return 1
         # ^^ tar will fail if any previous step fails
-        ls -la ./src
+
+        ls -la ./src || return 1
+        # if the tar file doesn't contain required files this command fails
     cd -
 
     cd /tmp/workspace/src
