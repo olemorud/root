@@ -11,7 +11,7 @@ cmakeOptionsHash=$(printf '%s' "$OPTIONS" | shasum | cut -d ' ' -f 1)
 archiveNamePrefix="$PLATFORM/$BRANCH/$CONFIG/$cmakeOptionsHash/"
 uploadName="$archiveNamePrefix$(date +%F).tar.gz"
 
-mkdir /tmp/workspace/
+mkdir -p /tmp/workspace/
 cd /tmp/workspace/       || exit 1
 rm -rf /tmp/workspace/*
 
