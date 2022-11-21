@@ -140,9 +140,7 @@ Write-Host $Token
 $ArchiveParentPath = GetArchiveNamePrefix -CMakeParams $CMakeParams
 $DownloadName = (SearchArchive -Token $Token -Prefix $ArchiveParentPath).Content.Split([Environment]::NewLine) | Select-Object -Last 1
 $UploadName = $ArchiveParentPath + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
-Write-Host "ArchiveParentPath: $ArchiveParentPath"
-Write-Host "Downloadname: $DownloadName"
-Write-Host "UploadName: $UploadName"
+
 if($DownloadName -eq ""){
     $env:INCREMENTAL = $false
 }
@@ -164,7 +162,7 @@ try {
 ===========================================================
                  COULD NOT CONNECT TO S3
 
-             BUILD ARTIFACTS ARE NOT STORED
+            BUILD ARTIFACTS WILL NOT BE STORED
 ===========================================================
 '@
     $env:INCREMENTAL = false
@@ -193,13 +191,13 @@ if("$env:INCREMENTAL" -eq $true){
         log Push-Location
         log Set-Location "$Workdir/source"
         log git pull
-        log Pop-Location
-        if (git rev-parse HEAD -eq git rev-parse '@{u}' ){
+        if ((git rev-parse HEAD) -eq (git rev-parse '@{u}') ){
             Write-Host "Files are unchanged since last build, exiting"
             exit 0
         }
+        log Pop-Location
     } catch {
-        Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means previous build artifacts don't exist)"
+        Write-Host "Failed to download previous build artifacts. Doing non-incremental build (previous build artifacts most likely don't exist)"
         $env:INCREMENTAL=$false
     }
 }
