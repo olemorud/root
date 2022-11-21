@@ -138,7 +138,7 @@ Write-Host $Token
 
 
 $ArchiveParentPath = GetArchiveNamePrefix -CMakeParams $CMakeParams
-$DownloadName = (SearchArchive -Token $Token -Prefix $ArchiveParentPath).Content.Split([Environment]::NewLine) | Select-Object -First 1
+$DownloadName = (SearchArchive -Token $Token -Prefix $ArchiveParentPath).Content.Split([Environment]::NewLine) | Select-Object -Last 1
 $UploadName = $ArchiveParentPath + (Get-Date -Format yyyy-MM-dd) + ".tar.gz"
 Write-Host "ArchiveParentPath: $ArchiveParentPath"
 Write-Host "Downloadname: $DownloadName"
