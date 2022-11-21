@@ -194,6 +194,10 @@ if("$env:INCREMENTAL" -eq $true){
         log Set-Location "$Workdir/source"
         log git pull
         log Pop-Location
+        if (git rev-parse HEAD -eq git rev-parse '@{u}' ){
+            Write-Host "Files are unchanged since last build, exiting"
+            exit 0
+        }
     } catch {
         Write-Host "Downloading previous build artifacts failed, doing non-incremental build (This most likely means previous build artifacts don't exist)"
         $env:INCREMENTAL=$false
