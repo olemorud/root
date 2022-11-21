@@ -81,6 +81,10 @@ pipeline {
                     """
                 }
             }
+            options {
+                timestamps()
+                ansiColor('xterm')
+            }
             steps {
                 withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
@@ -105,6 +109,10 @@ pipeline {
                 expression { PLATFORM ==~ /mac.*/ }
             }
             agent { label "${PLATFORM}" }
+            options {
+                timestamps()
+                ansiColor('xterm')
+            }
             steps {
                 withCredentials(
                     [string(credentialsId: 'root-s3', variable: 'OS_APPLICATION_CREDENTIAL_SECRET')]
