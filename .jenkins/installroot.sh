@@ -12,16 +12,16 @@ declare -A config
 
 # Load global options from file
 while IFS='=' read -r key value; do
-	if [ ! -z "$key" ] && [ ! -z "$value" ]; then
-		config[$key]=$value
-	fi
+    if [ ! -z "$key" ] && [ ! -z "$value" ]; then
+        config[$key]=$value
+    fi
 done < "$this/buildconfig/global.txt"
 
 # Overwrite with platform-specific options from file
 while IFS='=' read -r key value; do
-	if [ ! -z "$key" ] && [ ! -z "$value" ]; then
-		config[$key]=$value
-	fi
+    if [ ! -z "$key" ] && [ ! -z "$value" ]; then
+        config[$key]=$value
+    fi
 done < "$this/buildconfig/$PLATFORM.txt"
 
 # Use dictionary to populate cmake options
@@ -46,7 +46,7 @@ source "$this/s3/utils.sh"
 
 
 
-# ======== Download+pull or clone, generate and install ====
+# ===== Download + pull or clone, generate and install =====
 mkdir -p /tmp/workspace/
 cd /tmp/workspace/       || exit 1
 rm -rf /tmp/workspace/*
@@ -104,7 +104,8 @@ if ! $stubCMake; then
     if ! $INCREMENTAL; then
         cmake -S /tmp/workspace/src \
               -B /tmp/workspace/build \
-              -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install $buildOptions || exit 1
+              -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install \
+              $buildOptions || exit 1
     fi
 
     cmake --build /tmp/workspace/build \
