@@ -1,0 +1,9 @@
+alien=On
+arrow=On
+asimage=Off
+
+asserts=ON
+builtin_afterimage=On
+builtin_cfitsio=Off
+builtin_cppzmq=On
+soversion=ON
