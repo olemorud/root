@@ -16,11 +16,22 @@ WORKDIR = "/tmp/workspace"
 CONTAINER = "ROOT-build-artifacts"
 
 
+def print_bold(*values) -> None:
+    """prints message in bold"""
+    print("\033[1m")
+    print(*values)
+    print("\033[22m")
+
+
+
+
+
 def exec_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
-    """Runs shell command and appends to log"""
+    """Runs <command> in shell and appends <command> to log"""
 
     if debug:
-        print(command)
+        for line in command.splitlines():
+            print_bold(line.strip())
 
     result = subprocess.run(command, shell=True, check=False)
 
@@ -39,9 +50,9 @@ def fail(code: int, msg: str, log: str = "") -> None:
 
 
 def load_config(filename) -> dict:
-    """Load cmake options from a file as a dictionary"""
+    """Loads cmake options from a file to a dictionary"""
 
-    config = {}
+    options = {}
 
     try:
         file = open(filename, 'r', encoding='utf-8')
@@ -54,28 +65,37 @@ def load_config(filename) -> dict:
                     continue
 
                 key, val = line.rstrip().split('=')
-                config[key] = val
+                options[key] = val
 
-    return config
+    return options
 
 
 def options_from_dict(config: Dict[str, str]) -> str:
-    """Converts cmake option dictionary to string"""
+    """Converts a dictionary of build options to string.
+       The output is sorted alphanumerically.
+
+       example: {"builtin_xrootd"="on", "alien"="on"}
+                 -> '"-Dalien=on" -Dbuiltin_xrootd=on"'
+    """
 
     if not config:
         return ''
 
-    output = ''
+    output = []
 
     for key, value in config.items():
-        output += f'"-D{key}={value}" '
+        output.append(f'"-D{key}={value}" ')
 
-    return output
+    output.sort()
+
+    return " ".join(output)
 
 
 def download_latest(connection, container: str, prefix: str) -> str:
-    """Downloads previous build artifacts for a given environment
-       and returns the file path to the downloaded file"""
+    """Downloads latest build artifacts starting with <prefix>
+       and returns its path.
+
+       Outputs a link to the file to stdout"""
 
     try:
         objects = connection.list_objects(
