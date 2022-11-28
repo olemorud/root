@@ -47,9 +47,6 @@ source "$this/s3/utils.sh"
 
 
 # ===== Download + pull or clone, generate and install =====
-mkdir -p /tmp/workspace/
-cd /tmp/workspace/       || exit 1
-rm -rf /tmp/workspace/*
 
 cloneFromGit() {
     INCREMENTAL=false
@@ -92,6 +89,11 @@ env | sort -i
 date
 pwd
 
+# clear existing files
+mkdir -p /tmp/workspace/
+cd /tmp/workspace/       || exit 1
+rm -rf /tmp/workspace/*
+
 # fetch files
 if $INCREMENTAL; then
     downloadAndGitPull || cloneFromGit || exit 0
@@ -100,24 +102,16 @@ else
 fi
 
 # generate+build
-if ! $stubCMake; then
-    if ! $INCREMENTAL; then
-        cmake -S /tmp/workspace/src \
-              -B /tmp/workspace/build \
-              -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install \
-              $buildOptions || exit 1
-    fi
-
-    cmake --build /tmp/workspace/build \
-          --target install \
-          -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
-else
-    # Stubbing CMake lets you test changes to the script without
-    # waiting 30 minutes for CMake to build ROOT
-    echo "Stubbing CMake step"
-    echo "build file"   > /tmp/workspace/build/buildfile.txt
-    echo "install file" > /tmp/workspace/install/installfile.txt
+if ! $INCREMENTAL; then
+    cmake -S /tmp/workspace/src \
+            -B /tmp/workspace/build \
+            -DCMAKE_INSTALL_PREFIX=/tmp/workspace/install \
+            $buildOptions || exit 1
 fi
+
+cmake --build /tmp/workspace/build \
+        --target install \
+        -- -j"$(getconf _NPROCESSORS_ONLN)" || exit 1
 
 
 

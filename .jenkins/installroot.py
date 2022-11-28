@@ -8,6 +8,7 @@ import subprocess
 import sys
 import tarfile
 from hashlib import sha1
+import textwrap
 from typing import Dict, Tuple
 import openstack
 
@@ -23,20 +24,16 @@ def print_bold(*values) -> None:
     print("\033[22m")
 
 
-
-
-
-def exec_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
+def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
 
     if debug:
-        for line in command.splitlines():
-            print_bold(line.strip())
+        print_bold(textwrap.dedent(command))
 
     result = subprocess.run(command, shell=True, check=False)
 
     return (result.returncode,
-            log + '\n' + command)
+            log + '\n' + textwrap.dedent(command))
 
 
 def fail(code: int, msg: str, log: str = "") -> None:
@@ -162,7 +159,7 @@ def main():
 
     if incremental:
         # Pull changes from git
-        result, log = exec_with_log(f"""
+        result, log = subprocess_with_log(f"""
             cd {WORKDIR}/src \
                 || return 3
 
@@ -187,7 +184,7 @@ def main():
 
     if not incremental:
         # Clone from git
-        result, log = exec_with_log(f"""
+        result, log = subprocess_with_log(f"""
             mkdir -p {WORKDIR}/build
             mkdir -p {WORKDIR}/install
 
@@ -202,7 +199,7 @@ def main():
             fail(result, "Could not clone from git", log)
 
         # Generate with cmake
-        result, log = exec_with_log(f"""
+        result, log = subprocess_with_log(f"""
             cmake -S {WORKDIR}/src \
                   -B {WORKDIR}/build \
                   -DCMAKE_INSTALL_PREFIX={WORKDIR}/install \
@@ -213,7 +210,7 @@ def main():
             fail(result, "Failed cmake generation step", log)
 
     # Build with cmake
-    result, log = exec_with_log(f"""
+    result, log = subprocess_with_log(f"""
         cmake --build {WORKDIR}/build \
               --target install \
               -- -j"$(getconf _NPROCESSORS_ONLN)"
@@ -221,6 +218,9 @@ def main():
 
     if result != 0:
         fail(result, "Build failed", log)
+
+    print_bold("Script to replicate log:\n")
+    print(log)
 
 
 if __name__ == "__main__":
