@@ -98,6 +98,8 @@ def options_from_dict(config: Dict[str, str]) -> str:
 def upload_to_s3(connection, container: str, name: str, path: str) -> None:
     """Uploads file to s3 object storage."""
 
+    print(f"Attempting to upload {path} to {name}")
+
     if not os.path.exists(path):
         raise Exception(f"No such file: {path}")
 
@@ -105,10 +107,15 @@ def upload_to_s3(connection, container: str, name: str, path: str) -> None:
         connection.create_object(container, name, path)
     except Exception as err:
         raise err
+    
+    print(f"Successfully uploaded to {name}")
 
 
 def download_file(connection, container: str, name: str, destination: str) -> None:
     """Downloads a file from s3 object storage"""
+
+    print(f"Attempting to download {name} to {destination}")
+
     try:
         if not os.path.exists(os.path.dirname(destination)):
             os.makedirs(os.path.dirname(destination))
@@ -252,6 +259,7 @@ def main():
         fail(result, "Build failed", log)
 
     try:
+        print("Archiving build artifacts...")
         new_archive = f"{yyyymmdd}.tar.gz"
 
         with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
