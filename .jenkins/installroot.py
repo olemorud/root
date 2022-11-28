@@ -9,6 +9,7 @@ import sys
 import tarfile
 from hashlib import sha1
 import textwrap
+import time
 from typing import Dict, Tuple
 import openstack
 
@@ -29,9 +30,14 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
 
     if debug:
         print_bold(textwrap.dedent(command))
-
+        start = time.time()
+        
     result = subprocess.run(command, shell=True, check=False)
-
+    
+    if debug:
+        elapsed = time.time() - start
+        print_bold(f"\nFinished expression in {elapsed}\n")
+    
     return (result.returncode,
             log + '\n' + textwrap.dedent(command))
 
