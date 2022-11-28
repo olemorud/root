@@ -2,15 +2,16 @@
 
 """Script to download and build ROOT"""
 
+from datetime import datetime
+from hashlib import sha1
+from typing import Dict, Tuple
 import os
 import shutil
 import subprocess
 import sys
 import tarfile
-from hashlib import sha1
 import textwrap
 import time
-from typing import Dict, Tuple
 import openstack
 
 
@@ -31,13 +32,13 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     if debug:
         print_bold(textwrap.dedent(command))
         start = time.time()
-        
+
     result = subprocess.run(command, shell=True, check=False)
-    
+
     if debug:
         elapsed = time.time() - start
         print_bold(f"\nFinished expression in {elapsed}\n")
-    
+
     return (result.returncode,
             log + '\n' + textwrap.dedent(command))
 
@@ -94,17 +95,40 @@ def options_from_dict(config: Dict[str, str]) -> str:
     return " ".join(output)
 
 
+def upload_to_s3(connection, container: str, name: str, path: str) -> None:
+    """Uploads file to s3 object storage."""
+
+    if not os.path.exists(path):
+        raise Exception(f"No such file: {path}")
+
+    try:
+        connection.create_object(container, name, path)
+    except Exception as err:
+        raise err
+
+
+def download_file(connection, container: str, name: str, destination: str) -> None:
+    """Downloads a file from s3 object storage"""
+    try:
+        if not os.path.exists(os.path.dirname(destination)):
+            os.makedirs(os.path.dirname(destination))
+
+        with open(destination, 'wb') as file:
+            connection.get_object(container, name, outfile=file)
+    except Exception as err:
+        raise err
+
+
 def download_latest(connection, container: str, prefix: str) -> str:
-    """Downloads latest build artifacts starting with <prefix>
+    """Downloads latest build artifact tar starting with <prefix>
        and returns its path.
 
        Outputs a link to the file to stdout"""
 
     try:
-        objects = connection.list_objects(
-            'ROOT-build-artifacts', prefix=prefix)
-    except openstack.exceptions.OpenStackCloudException as exception:
-        raise exception
+        objects = connection.list_objects(container, prefix=prefix)
+    except openstack.exceptions.OpenStackCloudException as err:
+        raise err
 
     if not objects:
         raise Exception(f"No object found with prefix: {prefix}")
@@ -113,22 +137,20 @@ def download_latest(connection, container: str, prefix: str) -> str:
     artifacts.sort()
     latest = artifacts[-1]
 
+    destination = f"{WORKDIR}/{latest}.tar.gz"
+
     try:
-        if not os.path.exists(f"{WORKDIR}/{prefix}"):
-            os.makedirs(f"{WORKDIR}/{prefix}")
-
-        with open(f"{WORKDIR}/{latest}.tar.gz", 'wb') as file:
-            archive_path = file.name
-            connection.get_object(container, latest, outfile=file)
+        download_file(connection, container, latest, destination)
     except Exception as err:
-        raise err
+        raise Exception(f"Failed to download {latest}: {err}") from err
 
-    return archive_path
+    return destination
 
 
 def main():
     # openstack.enable_logging(debug=True)
     this = os.path.dirname(os.path.abspath(__file__))
+    yyyymmdd = datetime.today().strftime('%Y-%m-%d')
 
     if os.path.exists(WORKDIR):
         shutil.rmtree(WORKDIR)
@@ -152,16 +174,20 @@ def main():
     prefix = f'{platform}/{branch}/{config}/{option_hash}'
 
     try:
-        connection = openstack.connect(cloud='openstack')
+        connection = openstack.connect(cloud='envvars')
         tar_path = download_latest(connection, CONTAINER, prefix)
-    except openstack.exceptions.OpenStackCloudException:
-        print("Could not download previous artifacts, doing non-incremental build")
+        with tarfile.open(tar_path) as tar:
+            tar.extractAll()
+    except openstack.exceptions.OpenStackCloudException as err:
+        print(
+            f"Could not download previous artifacts, doing non-incremental build: {err}")
         incremental = False
     except tarfile.TarError:
         print("Failed to untar")
-    else:
-        with tarfile.open(tar_path) as tar:
-            tar.extractAll()
+    except Exception as err:
+        print(
+            f"Could not download previous artifacts, doing non-incremental build: {err}")
+        incremental = False
 
     if incremental:
         # Pull changes from git
@@ -224,6 +250,22 @@ def main():
 
     if result != 0:
         fail(result, "Build failed", log)
+
+    try:
+        new_archive = f"{yyyymmdd}.tar.gz"
+
+        with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
+            targz.add(f"{WORKDIR}/src")
+            targz.add(f"{WORKDIR}/install")
+            targz.add(f"{WORKDIR}/build")
+    except tarfile.TarError as err:
+        print(f"Could not tar artifacts: {err}")
+
+    try:
+        upload_to_s3(connection, CONTAINER,
+                     f"{prefix}/{new_archive}", f"{WORKDIR}/{new_archive}")
+    except Exception as err:
+        print("Uploading build artifacts failed", err)
 
     print_bold("Script to replicate log:\n")
     print(log)
