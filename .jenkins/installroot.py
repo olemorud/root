@@ -56,7 +56,7 @@ def main():
 
     if os.path.exists(WORKDIR):
         shutil.rmtree(WORKDIR)
-    shell_log += f"\rm -rf {WORKDIR}\n"
+    shell_log += f"\nrm -rf {WORKDIR}\n"
     os.makedirs(WORKDIR)
     shell_log += f"\nmkdir -p {WORKDIR}\n"
     os.chdir(WORKDIR)
@@ -74,11 +74,11 @@ def main():
         with tarfile.open(tar_path) as tar:
             tar.extractall()
     except tarfile.TarError as err:
-        print(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
+        print_fancy(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
         incremental = False
     except Exception as err:
-        print_fancy(
-            f"Failed to download, doing non-incremental build: {err}", sgr=33)
+        print_fancy(f"Failed to download: {err}", sgr=33)
+        print_fancy(f"doing non-incremental build: {err}", sgr=33)
         incremental = False
     else:
         shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
@@ -178,7 +178,6 @@ def print_fancy(*values, sgr=1) -> None:
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
     command = re.sub(' +', ' ', command)
-    command = textwrap.indent(command, '    ')
 
     if debug:
         print_fancy(command)
