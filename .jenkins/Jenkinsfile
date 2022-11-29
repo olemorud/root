@@ -23,11 +23,6 @@ pipeline {
             defaultValue: 'ubuntu22',
             description: 'The image to build. See: https://github.com/olemorud/root-build-ready'
         )
-        string(
-            name: 'CONFIG',
-            defaultValue: 'Release',
-            description: 'Debug|MinSizeRel|Optimized|Release|RelWithDebInfo'
-        )
         booleanParam(
             name: 'INCREMENTAL',
             defaultValue: true,

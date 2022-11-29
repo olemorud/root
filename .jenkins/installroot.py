@@ -43,7 +43,6 @@ def main():
 
     platform = os.environ['PLATFORM']
     branch = os.environ['BRANCH']
-    config = os.environ['CONFIG']
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
 
     options = options_from_dict({
@@ -85,6 +84,7 @@ def main():
         else:
             shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
 
+    if incremental:
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src || return 3
