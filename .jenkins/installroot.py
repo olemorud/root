@@ -35,7 +35,7 @@ def main():
        expanded before being sent to the log wrapper in hard to predict ways.
     """
     # openstack.enable_logging(debug=True)
-    this = os.path.dirname(os.path.abspath(__file__))
+    python_script_dir = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.datetime.today().strftime('%Y-%m-%d')
 
     shell_log = ""
@@ -46,13 +46,14 @@ def main():
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
 
     options = options_from_dict({
-        **load_config(f'{this}/buildconfig/global.txt'),
-        **load_config(f'{this}/buildconfig/{platform}.txt')  # has precedence
+        **load_config(f'{python_script_dir}/buildconfig/global.txt'),
+        **load_config(f'{python_script_dir}/buildconfig/{platform}.txt')  # has precedence
     })
 
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     prefix = f'{platform}/{branch}/{config}/{option_hash}'
 
+    # Clean up previous builds
     if os.path.exists(WORKDIR):
         shutil.rmtree(WORKDIR)
     shell_log += f"\nrm -rf {WORKDIR}\n"
@@ -61,6 +62,7 @@ def main():
     os.chdir(WORKDIR)
     shell_log += f"\ncd {WORKDIR}\n"
 
+    # Download and extract previous build artifacts
     connection = None
     try:
         print("\nEstablishing s3 connection")
@@ -78,10 +80,10 @@ def main():
     else:
         shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
 
+    # Do git pull on incremental builds
     if incremental:
         print("Doing incremental build")
-        
-        # Pull changes from git
+
         result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src || return 3
 
@@ -93,19 +95,19 @@ def main():
         """, shell_log)
 
         if result == 1:
-            print("Failed to git pull, doing non-incremental build")
+            print("Failed to git pull")
             incremental = False
         elif result == 2:
             print("Files are unchanged since last build, exiting")
             exit(0)
         elif result == 3:
-            print(f"could not cd {WORKDIR}/src, doing non-incremental build")
+            print(f"Could not cd {WORKDIR}/src")
             incremental = False
 
-    # Clone and run generation step on non-incrementals
+    # Clone and run generation step on non-incremental builds
     if not incremental:
         print("Doing non-incremental build")
-        
+
         result, shell_log = subprocess_with_log(f"""
             mkdir -p {WORKDIR}/build
             mkdir -p {WORKDIR}/install
@@ -130,7 +132,7 @@ def main():
         if result != 0:
             die(result, "Failed cmake generation step", shell_log)
 
-    # Build ROOT
+    # Build
     result, shell_log = subprocess_with_log(f"""
         cmake --build {WORKDIR}/build \
               --target install \
@@ -146,9 +148,9 @@ def main():
         new_archive = f"{yyyymmdd}.tar.gz"
         try:
             with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=4) as targz:
-                targz.add(f"{WORKDIR}/src")
-                targz.add(f"{WORKDIR}/install")
-                targz.add(f"{WORKDIR}/build")
+                targz.add("./src")
+                targz.add("./install")
+                targz.add("./build")
 
             upload_file(
                 connection=connection,
@@ -254,14 +256,14 @@ def upload_file(connection, container: str, name: str, path: str) -> None:
         raise Exception(f"No such file: {path}")
 
     gigabyte = 1073741824
-    week_in_seconds = 604800
+    # week_in_seconds = 604800
 
     connection.create_object(
         container,
         name,
         path,
         segment_size=2*gigabyte
-        #**{'X-Delete-After':week_in_seconds}
+        # **{'X-Delete-After':week_in_seconds}
     )
 
     print(f"Successfully uploaded to {name}")
@@ -293,13 +295,15 @@ def download_latest(connection, container: str, prefix: str) -> str:
     artifacts = [obj.name for obj in objects]
     artifacts.sort()
     latest = artifacts[-1]
+    file = latest.split(".tar.gz")[0] + ".tar.gz" # ugly fix because files
+                                                  # are sometimes segmented in s3
 
-    destination = f"{WORKDIR}/{latest}.tar.gz"
+    destination = f"{WORKDIR}/{file}"
 
     try:
-        download_file(connection, container, latest, destination)
+        download_file(connection, container, file, destination)
     except Exception as err:
-        raise Exception(f"Failed to download {latest}: {err}") from err
+        raise Exception(f"Failed to download {file}: {err}") from err
 
     return destination
 
