@@ -41,8 +41,11 @@ def main():
 
     if os.path.exists(WORKDIR):
         shutil.rmtree(WORKDIR)
+    shell_log += f"\rm -rf {WORKDIR}\n"
     os.makedirs(WORKDIR)
+    shell_log += f"\nmkdir -p {WORKDIR}\n"
     os.chdir(WORKDIR)
+    shell_log += f"\ncd {WORKDIR}\n"
 
     try:
         print("\nEstablishing s3 connection")
@@ -57,26 +60,22 @@ def main():
     except tarfile.TarError as err:
         print(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
         incremental = False
-    except openstack.exceptions.OpenStackCloudException as err:
+    except Exception as err:
         print_fancy(f"Failed to download, doing non-incremental build: {err}", sgr=33)
         incremental = False
     else:
-        shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}\n\n"
+        shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
 
     if incremental:
         # Pull changes from git
         result, shell_log = subprocess_with_log(f"""
-            cd {WORKDIR}/src \
-                || return 3
+            cd {WORKDIR}/src || return 3
 
-            git fetch \
-                || return 1
+            git fetch || return 1
 
-            test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" \
-                && return 2
+            test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" && return 2
 
-            git merge FETCH_HEAD \
-                || return 1
+            git merge FETCH_HEAD || return 1
         """, shell_log)
 
         if result == 1:
@@ -125,6 +124,7 @@ def main():
     if result != 0:
         die(result, "Build step failed", shell_log)
 
+    # Upload and archive
     print("Archiving build artifacts")
     new_archive = f"{yyyymmdd}.tar.gz"
     try:
