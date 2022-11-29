@@ -92,7 +92,7 @@ pipeline {
                     sh '''
                         ls -l
                         #chmod u+x ./.jenkins/installroot.sh && ./.jenkins/installroot.sh
-                        python3 ./.jenkins/installroot.py
+                        python3 -u ./.jenkins/installroot.py
                     '''
                 }
             }
