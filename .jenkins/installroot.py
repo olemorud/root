@@ -19,31 +19,33 @@ WORKDIR = "/tmp/workspace"
 CONTAINER = "ROOT-build-artifacts"
 
 
-def print_bold(*values) -> None:
-    """prints message in bold"""
-    print("\033[1m")
+def print_fancy(*values, sgr=1) -> None:
+    """prints message with select graphic rendition, defailts to bold
+       https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters"""
+
+    print(f"\033[{sgr}m", end='')
     print(*values)
-    print("\033[22m")
+    print("\033[0m", end='')
 
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
 
     if debug:
-        print_bold(textwrap.dedent(command))
+        print_fancy(textwrap.dedent(command))
         start = time.time()
 
     result = subprocess.run(command, shell=True, check=False)
 
     if debug:
         elapsed = time.time() - start
-        print_bold(f"\nFinished expression in {elapsed}\n")
+        print_fancy(f"\nFinished expression in {elapsed}\n", 3)
 
     return (result.returncode,
             log + '\n' + textwrap.dedent(command))
 
 
-def fail(code: int, msg: str, log: str = "") -> None:
+def die(code: int, msg: str, log: str = "") -> None:
     """prints error code, message and exits"""
     print(f"Fatal error ({code}): {msg}")
 
@@ -61,11 +63,11 @@ def load_config(filename) -> dict:
     try:
         file = open(filename, 'r', encoding='utf-8')
     except OSError as err:
-        print(f"Couldn't read {filename}: {err.strerror}")
+        print(f"Warning: couldn't load {filename}: {err.strerror}")
     else:
         with file:
             for line in file:
-                if line == "" or "=" not in line:
+                if line == '' or '=' not in line:
                     continue
 
                 key, val = line.rstrip().split('=')
@@ -92,10 +94,10 @@ def options_from_dict(config: Dict[str, str]) -> str:
 
     output.sort()
 
-    return " ".join(output)
+    return ' '.join(output)
 
 
-def upload_to_s3(connection, container: str, name: str, path: str) -> None:
+def upload_file(connection, container: str, name: str, path: str) -> None:
     """Uploads file to s3 object storage."""
 
     print(f"Attempting to upload {path} to {name}")
@@ -103,11 +105,8 @@ def upload_to_s3(connection, container: str, name: str, path: str) -> None:
     if not os.path.exists(path):
         raise Exception(f"No such file: {path}")
 
-    try:
-        connection.create_object(container, name, path)
-    except Exception as err:
-        raise err
-    
+    connection.create_object(container, name, path)
+
     print(f"Successfully uploaded to {name}")
 
 
@@ -116,14 +115,11 @@ def download_file(connection, container: str, name: str, destination: str) -> No
 
     print(f"Attempting to download {name} to {destination}")
 
-    try:
-        if not os.path.exists(os.path.dirname(destination)):
-            os.makedirs(os.path.dirname(destination))
+    if not os.path.exists(os.path.dirname(destination)):
+        os.makedirs(os.path.dirname(destination))
 
-        with open(destination, 'wb') as file:
-            connection.get_object(container, name, outfile=file)
-    except Exception as err:
-        raise err
+    with open(destination, 'wb') as file:
+        connection.get_object(container, name, outfile=file)
 
 
 def download_latest(connection, container: str, prefix: str) -> str:
@@ -132,10 +128,7 @@ def download_latest(connection, container: str, prefix: str) -> str:
 
        Outputs a link to the file to stdout"""
 
-    try:
-        objects = connection.list_objects(container, prefix=prefix)
-    except openstack.exceptions.OpenStackCloudException as err:
-        raise err
+    objects = connection.list_objects(container, prefix=prefix)
 
     if not objects:
         raise Exception(f"No object found with prefix: {prefix}")
@@ -159,13 +152,7 @@ def main():
     this = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.today().strftime('%Y-%m-%d')
 
-    if os.path.exists(WORKDIR):
-        shutil.rmtree(WORKDIR)
-
-    os.makedirs(WORKDIR)
-    os.chdir(WORKDIR)
-
-    log = ""
+    script_log = ""
 
     platform = os.environ['PLATFORM']
     branch = os.environ['BRANCH']
@@ -180,25 +167,26 @@ def main():
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     prefix = f'{platform}/{branch}/{config}/{option_hash}'
 
+    if os.path.exists(WORKDIR):
+        shutil.rmtree(WORKDIR)
+    os.makedirs(WORKDIR)
+    os.chdir(WORKDIR)
+
     try:
-        connection = openstack.connect(cloud='envvars')
+        connection = openstack.connect()
         tar_path = download_latest(connection, CONTAINER, prefix)
         with tarfile.open(tar_path) as tar:
-            tar.extractAll()
-    except openstack.exceptions.OpenStackCloudException as err:
-        print(
-            f"Could not download previous artifacts, doing non-incremental build: {err}")
+            tar.extractall()
+    except tarfile.TarError as err:
+        print(f"Failed to untar, doing non-incremental build: {err}")
         incremental = False
-    except tarfile.TarError:
-        print("Failed to untar")
     except Exception as err:
-        print(
-            f"Could not download previous artifacts, doing non-incremental build: {err}")
+        print_fancy(f"Could not download previous artifacts, doing non-incremental build: {err}")
         incremental = False
 
     if incremental:
         # Pull changes from git
-        result, log = subprocess_with_log(f"""
+        result, script_log = subprocess_with_log(f"""
             cd {WORKDIR}/src \
                 || return 3
 
@@ -210,7 +198,7 @@ def main():
 
             git merge FETCH_HEAD \
                 || return 1
-        """, log)
+        """, script_log)
 
         if result == 1:
             print("Failed to git pull, doing non-incremental build")
@@ -221,9 +209,9 @@ def main():
         elif result == 3:
             print(f"could not cd {WORKDIR}/src")
 
+    # Clone and run generation step on non-incrementals
     if not incremental:
-        # Clone from git
-        result, log = subprocess_with_log(f"""
+        result, script_log = subprocess_with_log(f"""
             mkdir -p {WORKDIR}/build
             mkdir -p {WORKDIR}/install
 
@@ -232,51 +220,53 @@ def main():
                       --depth 1 \
                       https://github.com/root-project/root.git \
                       {WORKDIR}/src
-        """, log)
+        """, script_log)
 
         if result != 0:
-            fail(result, "Could not clone from git", log)
+            die(result, "Could not clone from git", script_log)
 
-        # Generate with cmake
-        result, log = subprocess_with_log(f"""
+        result, script_log = subprocess_with_log(f"""
             cmake -S {WORKDIR}/src \
                   -B {WORKDIR}/build \
                   -DCMAKE_INSTALL_PREFIX={WORKDIR}/install \
                     {options}
-        """, log)
+        """, script_log)
 
         if result != 0:
-            fail(result, "Failed cmake generation step", log)
+            die(result, "Failed cmake generation step", script_log)
 
-    # Build with cmake
-    result, log = subprocess_with_log(f"""
+    # Build ROOT
+    result, script_log = subprocess_with_log(f"""
         cmake --build {WORKDIR}/build \
               --target install \
               -- -j"$(getconf _NPROCESSORS_ONLN)"
-    """, log)
+    """, script_log)
 
     if result != 0:
-        fail(result, "Build failed", log)
+        die(result, "Build failed", script_log)
 
+    print_fancy("Archiving build artifacts...")
+    new_archive = f"{yyyymmdd}.tar.gz"
     try:
-        print("Archiving build artifacts...")
-        new_archive = f"{yyyymmdd}.tar.gz"
-
         with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
             targz.add(f"{WORKDIR}/src")
             targz.add(f"{WORKDIR}/install")
             targz.add(f"{WORKDIR}/build")
     except tarfile.TarError as err:
-        print(f"Could not tar artifacts: {err}")
+        print_fancy(f"Could not tar artifacts: {err}", sgr=41)
+    else:
+        try:
+            upload_file(
+                connection=connection,
+                container=CONTAINER,
+                name=f"{prefix}/{new_archive}",
+                path=f"{WORKDIR}/{new_archive}"
+            )
+        except Exception as err:
+            print_fancy(f"Uploading build artifacts failed: {err}", sgr=41)
 
-    try:
-        upload_to_s3(connection, CONTAINER,
-                     f"{prefix}/{new_archive}", f"{WORKDIR}/{new_archive}")
-    except Exception as err:
-        print("Uploading build artifacts failed", err)
-
-    print_bold("Script to replicate log:\n")
-    print(log)
+    print_fancy("Script to replicate log:\n")
+    print(script_log)
 
 
 if __name__ == "__main__":
