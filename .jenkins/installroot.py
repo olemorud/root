@@ -79,7 +79,8 @@ def main():
         shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
 
     if incremental:
-        print_fancy("doing non-incremental build")
+        print("Doing incremental build")
+        
         # Pull changes from git
         result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src || return 3
@@ -103,6 +104,8 @@ def main():
 
     # Clone and run generation step on non-incrementals
     if not incremental:
+        print("Doing non-incremental build")
+        
         result, shell_log = subprocess_with_log(f"""
             mkdir -p {WORKDIR}/build
             mkdir -p {WORKDIR}/install
