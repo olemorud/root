@@ -62,28 +62,29 @@ def main():
     os.chdir(WORKDIR)
     shell_log += f"\ncd {WORKDIR}\n"
 
-    # Download and extract previous build artifacts
     connection = None
-    try:
-        print("\nEstablishing s3 connection")
-        connection = openstack.connect('envvars')
-
-        print("\nDownloading")
-        tar_path = download_latest(connection, CONTAINER, prefix)
-
-        print("\nExtracting archive")
-        with tarfile.open(tar_path) as tar:
-            tar.extractall()
-    except Exception as err:
-        print_fancy(f"Failed: {err}", sgr=33)
-        incremental = False
-    else:
-        shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
-
-    # Do git pull on incremental builds
+    
     if incremental:
-        print("Doing incremental build")
+        print("Attempting incremental build")
+        
+        # Download and extract previous build artifacts
+        try:
+            print("\nEstablishing s3 connection")
+            connection = openstack.connect('envvars')
 
+            print("\nDownloading")
+            tar_path = download_latest(connection, CONTAINER, prefix)
+
+            print("\nExtracting archive")
+            with tarfile.open(tar_path) as tar:
+                tar.extractall()
+        except Exception as err:
+            print_fancy(f"Failed: {err}", sgr=33)
+            incremental = False
+        else:
+            shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
+
+        # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src || return 3
 
