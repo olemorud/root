@@ -64,10 +64,10 @@ def main():
     shell_log += f"\ncd {WORKDIR}\n"
 
     connection = None
-    
+
     if incremental:
         print("Attempting incremental build")
-        
+
         # Download and extract previous build artifacts
         try:
             print("\nEstablishing s3 connection")
@@ -150,9 +150,9 @@ def main():
         new_archive = f"{yyyymmdd}.tar.gz"
         try:
             with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=4) as targz:
-                targz.add("./src")
-                targz.add("./install")
-                targz.add("./build")
+                targz.add("src")
+                targz.add("install")
+                targz.add("build")
 
             upload_file(
                 connection=connection,
@@ -182,7 +182,7 @@ def print_warning(*values):
 
 def print_error(*values):
     print_fancy("Fatal error: ", *values, sgr=31)
-    
+
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
@@ -200,7 +200,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
         print_fancy(f"\nFinished expression in {elapsed}\n", sgr=3)
 
     return (result.returncode,
-            log + '\n' + command)
+            log + '\n(\n' + command + '\n)')
 
 
 def die(code: int, msg: str, log: str = "") -> None:
