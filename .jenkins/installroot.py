@@ -24,7 +24,7 @@ def main():
     this = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.today().strftime('%Y-%m-%d')
 
-    script_log = ""
+    shell_log = ""
 
     platform = os.environ['PLATFORM']
     branch = os.environ['BRANCH']
@@ -57,13 +57,15 @@ def main():
     except tarfile.TarError as err:
         print(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
         incremental = False
-    except Exception as err:
+    except openstack.exceptions.OpenStackCloudException as err:
         print_fancy(f"Failed to download, doing non-incremental build: {err}", sgr=33)
         incremental = False
+    else:
+        shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}\n\n"
 
     if incremental:
         # Pull changes from git
-        result, script_log = subprocess_with_log(f"""
+        result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src \
                 || return 3
 
@@ -75,7 +77,7 @@ def main():
 
             git merge FETCH_HEAD \
                 || return 1
-        """, script_log)
+        """, shell_log)
 
         if result == 1:
             print("Failed to git pull, doing non-incremental build")
@@ -89,7 +91,7 @@ def main():
 
     # Clone and run generation step on non-incrementals
     if not incremental:
-        result, script_log = subprocess_with_log(f"""
+        result, shell_log = subprocess_with_log(f"""
             mkdir -p {WORKDIR}/build
             mkdir -p {WORKDIR}/install
 
@@ -98,30 +100,30 @@ def main():
                       --depth 1 \
                       https://github.com/root-project/root.git \
                       {WORKDIR}/src
-        """, script_log)
+        """, shell_log)
 
         if result != 0:
-            die(result, "Could not clone from git", script_log)
+            die(result, "Could not clone from git", shell_log)
 
-        result, script_log = subprocess_with_log(f"""
+        result, shell_log = subprocess_with_log(f"""
             cmake -S {WORKDIR}/src \
                   -B {WORKDIR}/build \
                   -DCMAKE_INSTALL_PREFIX={WORKDIR}/install \
                     {options}
-        """, script_log)
+        """, shell_log)
 
         if result != 0:
-            die(result, "Failed cmake generation step", script_log)
+            die(result, "Failed cmake generation step", shell_log)
 
     # Build ROOT
-    result, script_log = subprocess_with_log(f"""
+    result, shell_log = subprocess_with_log(f"""
         cmake --build {WORKDIR}/build \
               --target install \
               -- -j"$(getconf _NPROCESSORS_ONLN)"
-    """, script_log)
+    """, shell_log)
 
     if result != 0:
-        die(result, "Build step failed", script_log)
+        die(result, "Build step failed", shell_log)
 
     print("Archiving build artifacts")
     new_archive = f"{yyyymmdd}.tar.gz"
@@ -144,7 +146,7 @@ def main():
             print_fancy(f"Uploading build artifacts failed: {err}", sgr=33)
 
     print_fancy("Script to replicate log:\n")
-    print(script_log)
+    print(shell_log)
 
 
 def print_fancy(*values, sgr=1) -> None:
