@@ -146,10 +146,11 @@ def main():
         print("Archiving build artifacts")
         new_archive = f"{yyyymmdd}.tar.gz"
         try:
-            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
+            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=1) as targz:
                 targz.add(f"{WORKDIR}/src")
                 targz.add(f"{WORKDIR}/install")
                 targz.add(f"{WORKDIR}/build")
+
             upload_file(
                 connection=connection,
                 container=CONTAINER,
