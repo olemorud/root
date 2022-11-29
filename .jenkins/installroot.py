@@ -43,6 +43,7 @@ def main():
 
     platform = os.environ['PLATFORM']
     branch = os.environ['BRANCH']
+    config = os.environ['CONFIG']
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
 
     options = options_from_dict({
