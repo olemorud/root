@@ -5,6 +5,7 @@
 import datetime
 from hashlib import sha1
 import re
+import textwrap
 from typing import Dict, Tuple
 import os
 import shutil
@@ -79,7 +80,7 @@ def main():
             with tarfile.open(tar_path) as tar:
                 tar.extractall()
         except Exception as err:
-            print_fancy(f"Failed: {err}", sgr=33)
+            print_warning(f"failed: {err}")
             incremental = False
         else:
             shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
@@ -96,13 +97,13 @@ def main():
         """, shell_log)
 
         if result == 1:
-            print("Failed to git pull")
+            print_warning("failed to git pull")
             incremental = False
         elif result == 2:
             print("Files are unchanged since last build, exiting")
             exit(0)
         elif result == 3:
-            print(f"Could not cd {WORKDIR}/src")
+            print_warning(f"could not cd {WORKDIR}/src")
             incremental = False
 
     # Clone and run generation step on non-incremental builds
@@ -160,9 +161,9 @@ def main():
                 path=f"{WORKDIR}/{new_archive}"
             )
         except tarfile.TarError as err:
-            print_fancy(f"Could not tar artifacts: {err}", sgr=33)
+            print_warning(f"could not tar artifacts: {err}")
         except Exception as err:
-            print_fancy(err, sgr=33)
+            print_warning(err)
 
     print_fancy("Script to replicate log:\n")
     print(shell_log)
@@ -176,6 +177,12 @@ def print_fancy(*values, sgr=1) -> None:
     print(*values, end='')
     print("\033[0m")
 
+def print_warning(*values):
+    print_fancy("Warning: ", *values, sgr=33)
+
+def print_error(*values):
+    print_fancy("Fatal error: ", *values, sgr=31)
+    
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
@@ -198,10 +205,16 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
 
 def die(code: int, msg: str, log: str = "") -> None:
     """prints error code, message and exits"""
-    print(f"Fatal error ({code}): {msg}")
+    print_error(f"({code}) {msg}")
 
     if log != "":
-        print_fancy("To replicate build locally:\n", log, sgr=31)
+        print(textwrap.dedent(f"""
+            ######################################
+            #    To replicate build locally     #
+            ######################################
+            
+            {log}
+        """))
 
     sys.exit(code)
 
