@@ -2,7 +2,7 @@
 
 """Script to download and build ROOT"""
 
-from datetime import datetime
+import datetime
 from hashlib import sha1
 import re
 from typing import Dict, Tuple
@@ -11,7 +11,6 @@ import shutil
 import subprocess
 import sys
 import tarfile
-import textwrap
 import time
 import openstack
 
@@ -37,7 +36,7 @@ def main():
     """
     # openstack.enable_logging(debug=True)
     this = os.path.dirname(os.path.abspath(__file__))
-    yyyymmdd = datetime.today().strftime('%Y-%m-%d')
+    yyyymmdd = datetime.datetime.today().strftime('%Y-%m-%d')
 
     shell_log = ""
 
@@ -73,17 +72,14 @@ def main():
         print("\nExtracting archive")
         with tarfile.open(tar_path) as tar:
             tar.extractall()
-    except tarfile.TarError as err:
-        print_fancy(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
-        incremental = False
     except Exception as err:
-        print_fancy(f"Failed to download: {err}", sgr=33)
-        print_fancy(f"doing non-incremental build: {err}", sgr=33)
+        print_fancy(f"Failed: {err}", sgr=33)
         incremental = False
     else:
         shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
 
     if incremental:
+        print_fancy("doing non-incremental build")
         # Pull changes from git
         result, shell_log = subprocess_with_log(f"""
             cd {WORKDIR}/src || return 3
@@ -146,7 +142,7 @@ def main():
         print("Archiving build artifacts")
         new_archive = f"{yyyymmdd}.tar.gz"
         try:
-            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=1) as targz:
+            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=4) as targz:
                 targz.add(f"{WORKDIR}/src")
                 targz.add(f"{WORKDIR}/install")
                 targz.add(f"{WORKDIR}/build")
@@ -254,7 +250,16 @@ def upload_file(connection, container: str, name: str, path: str) -> None:
     if not os.path.exists(path):
         raise Exception(f"No such file: {path}")
 
-    connection.create_object(container, name, path)
+    gigabyte = 1073741824
+    week_in_seconds = 604800
+
+    connection.create_object(
+        container,
+        name,
+        path,
+        segment_size=2*gigabyte
+        #**{'X-Delete-After':week_in_seconds}
+    )
 
     print(f"Successfully uploaded to {name}")
 
