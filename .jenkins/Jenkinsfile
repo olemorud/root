@@ -79,7 +79,7 @@ pipeline {
                 }
             }
             options {
-                timestamps()
+                // timestamps()
                 ansiColor('xterm')
             }
             steps {
