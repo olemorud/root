@@ -33,21 +33,18 @@ pipeline {
             defaultValue: true,
             description: 'Use previous build artifacts to speed up build'
         )
-        string(
-            name: 'OS_APPLICATION_CREDENTIAL_ID',
-            defaultValue: '96f241a33ace42fea78580557b9cfdc0',
-            description: 'Openstack S3 credential ID'
-        )
-        //string(
-        //    name: 'BUILD_OPTIONS',
-        //    defaultValue: '',
-        //    description: 'Options to pass to CMake, e.g. -DCMAKE_CXX_STANDARD=17'
-        //)
     }
 
     environment {
         JENKINS_USER_ID  = '14806'
         JENKINS_GROUP_ID = '2735'
+
+        OS_APPLICATION_CREDENTIAL_ID = '96f241a33ace42fea78580557b9cfdc0'
+        OS_AUTH_TYPE = 'v3applicationcredential'
+        OS_AUTH_URL = 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION = 3
+        OS_INTERFACE = 'public'
+        OS_REGION_NAME = 'cern'
     }
 
     stages {

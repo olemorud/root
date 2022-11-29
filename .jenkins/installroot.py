@@ -46,7 +46,7 @@ def main():
 
     try:
         print("\nEstablishing s3 connection")
-        connection = openstack.connect()
+        connection = openstack.connect('envvars')
 
         print("\nDownloading")
         tar_path = download_latest(connection, CONTAINER, prefix)
@@ -148,7 +148,7 @@ def main():
 
 
 def print_fancy(*values, sgr=1) -> None:
-    """prints message using select graphic rendition, defaults to bold
+    """prints message using select graphic rendition, defaults to bold text
        https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters"""
 
     print(f"\033[{sgr}m", end='')
