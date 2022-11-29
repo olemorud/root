@@ -300,10 +300,7 @@ def download_latest(connection, container: str, prefix: str) -> str:
 
     destination = f"{WORKDIR}/{file}"
 
-    try:
-        download_file(connection, container, file, destination)
-    except Exception as err:
-        raise Exception(f"Failed to download {file}: {err}") from err
+    download_file(connection, container, file, destination)
 
     return destination
 
