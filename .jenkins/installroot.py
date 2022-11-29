@@ -21,6 +21,20 @@ CONTAINER = "ROOT-build-artifacts"
 
 
 def main():
+    """This mainly functions as a shell script, but python is used for its
+       superior control flow. An important requirement of the CI is easily
+       reproducible builds, therefore a wrapper is made for running shell
+       commands so that they are also logged.
+
+       The log is printed when build fails/succeeds and needs to perfectly
+       reproduce the build when pasted into a shell. Therefore all file system
+       modifying code not executed from shell needs a shell equivalent
+       explicitly appended to the shell log.
+          e.g. `os.chdir(x)` requires `cd x` to be appended to the shell log
+
+       Writing a similar wrapper in bash is difficult because variables are
+       expanded before being sent to the log wrapper in hard to predict ways.
+    """
     # openstack.enable_logging(debug=True)
     this = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.today().strftime('%Y-%m-%d')
@@ -63,7 +77,8 @@ def main():
         print(f"Failed to untar, doing non-incremental build: {err}", sgr=33)
         incremental = False
     except Exception as err:
-        print_fancy(f"Failed to download, doing non-incremental build: {err}", sgr=33)
+        print_fancy(
+            f"Failed to download, doing non-incremental build: {err}", sgr=33)
         incremental = False
     else:
         shell_log += f"\nwget https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path} -x -nH --cut-dirs 3\n\n"
@@ -172,7 +187,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     result = subprocess.run(command, shell=True, check=False)
 
     if debug:
-        elapsed = time.time() - start
+        elapsed = datetime.timedelta(seconds=time.time() - start)
         print_fancy(f"\nFinished expression in {elapsed}\n", sgr=3)
 
     return (result.returncode,
