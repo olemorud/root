@@ -4,6 +4,7 @@
 
 from datetime import datetime
 from hashlib import sha1
+import re
 from typing import Dict, Tuple
 import os
 import shutil
@@ -47,6 +48,7 @@ def main():
     os.chdir(WORKDIR)
     shell_log += f"\ncd {WORKDIR}\n"
 
+    connection = None
     try:
         print("\nEstablishing s3 connection")
         connection = openstack.connect('envvars')
@@ -125,25 +127,24 @@ def main():
         die(result, "Build step failed", shell_log)
 
     # Upload and archive
-    print("Archiving build artifacts")
-    new_archive = f"{yyyymmdd}.tar.gz"
-    try:
-        with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
-            targz.add(f"{WORKDIR}/src")
-            targz.add(f"{WORKDIR}/install")
-            targz.add(f"{WORKDIR}/build")
-    except tarfile.TarError as err:
-        print_fancy(f"Could not tar artifacts: {err}", sgr=33)
-    else:
+    if connection:
+        print("Archiving build artifacts")
+        new_archive = f"{yyyymmdd}.tar.gz"
         try:
+            with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz") as targz:
+                targz.add(f"{WORKDIR}/src")
+                targz.add(f"{WORKDIR}/install")
+                targz.add(f"{WORKDIR}/build")
             upload_file(
                 connection=connection,
                 container=CONTAINER,
                 name=f"{prefix}/{new_archive}",
                 path=f"{WORKDIR}/{new_archive}"
             )
+        except tarfile.TarError as err:
+            print_fancy(f"Could not tar artifacts: {err}", sgr=33)
         except Exception as err:
-            print_fancy(f"Uploading build artifacts failed: {err}", sgr=33)
+            print_fancy(err, sgr=33)
 
     print_fancy("Script to replicate log:\n")
     print(shell_log)
@@ -160,9 +161,11 @@ def print_fancy(*values, sgr=1) -> None:
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
+    command = re.sub(' +', ' ', command)
+    command = textwrap.indent(command, '    ')
 
     if debug:
-        print_fancy(textwrap.dedent(command))
+        print_fancy(command)
         start = time.time()
 
     print("\033[0m", end='')
@@ -173,7 +176,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
         print_fancy(f"\nFinished expression in {elapsed}\n", sgr=3)
 
     return (result.returncode,
-            log + '\n' + textwrap.dedent(command))
+            log + '\n' + command)
 
 
 def die(code: int, msg: str, log: str = "") -> None:
