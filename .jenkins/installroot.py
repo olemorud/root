@@ -228,15 +228,15 @@ def load_config(filename) -> dict:
     try:
         file = open(filename, 'r', encoding='utf-8')
     except OSError as err:
-        print(f"Warning: couldn't load {filename}: {err.strerror}")
+        print_warning(f"couldn't load {filename}: {err.strerror}")
     else:
         with file:
             for line in file:
-                if line == '' or '=' not in line:
+                if '=' not in line:
                     continue
 
                 key, val = line.rstrip().split('=')
-                options[key] = val
+                options[key] = val.lower()
 
     return options
 
@@ -255,7 +255,7 @@ def options_from_dict(config: Dict[str, str]) -> str:
     output = []
 
     for key, value in config.items():
-        output.append(f'"-D{key}={value}" ')
+        output.append(f'"-D{key}={value}"')
 
     output.sort()
 
@@ -308,10 +308,10 @@ def download_latest(connection, container: str, prefix: str) -> str:
         raise Exception(f"No object found with prefix: {prefix}")
 
     artifacts = [obj.name for obj in objects]
-    artifacts.sort()
-    latest = artifacts[-1]
+    latest = max(artifacts)
     file = latest.split(".tar.gz")[0] + ".tar.gz" # ugly fix because files
                                                   # are sometimes segmented in s3
+                                                  # so that they end in *.tar.gz/001
 
     destination = f"{WORKDIR}/{file}"
 
