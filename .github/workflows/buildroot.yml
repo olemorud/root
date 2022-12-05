@@ -16,7 +16,8 @@ jobs:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
       options: '--pull=always -u=root -e BRANCH=master'
       env:
-        OS_APPLICATION_CREDENTIAL_ID: '96f241a33ace42fea78580557b9cfdc0'
+        OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
         OS_AUTH_TYPE: 'v3applicationcredential'
         OS_AUTH_URL: 'https://keystone.cern.ch/v3'
         OS_IDENTITY_API_VERSION: 3
