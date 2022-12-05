@@ -1,0 +1,30 @@
+
+name: 'Build ROOT multi-platform'
+description: 'Builds ROOT on ubuntu18,20,22; fedora32,34; centos8; windows10 and mac12'
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
+      fail-fast: false
+
+    runs-on: ubuntu-latest
+
+    container:
+      image: ghcr.io/olemorud/${{ matrix.image }}:buildready
+      env:
+        OS_APPLICATION_CREDENTIAL_ID: '96f241a33ace42fea78580557b9cfdc0'
+        OS_AUTH_TYPE: 'v3applicationcredential'
+        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+        OS_IDENTITY_API_VERSION: 3
+        OS_INTERFACE: 'public'
+        OS_REGION_NAME: 'cern'
+      options: '--net=host --pull=always -u=root -e BRANCH=master'
+    
+    steps:
+      - name: Install root
+        run: (python3 .jenkins/installroot.py)
+
