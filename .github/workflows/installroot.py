@@ -170,19 +170,19 @@ def main():
     print(shell_log)
 
 
-def print_fancy(*values, sgr=1) -> None:
+def print_fancy(*values, sgr=1, **kwargs) -> None:
     """prints message using select graphic rendition, defaults to bold text
        https://en.wikipedia.org/wiki/ANSI_escape_code#SGR_(Select_Graphic_Rendition)_parameters"""
 
-    print(f"\033[{sgr}m", end='')
-    print(*values, end='')
-    print("\033[0m")
+    print(f"\033[{sgr}m", end='', **kwargs)
+    print(*values, end='', **kwargs)
+    print("\033[0m", **kwargs)
 
-def print_warning(*values):
-    print_fancy("Warning: ", *values, sgr=33)
+def print_warning(*values, **kwargs):
+    print_fancy("Warning: ", *values, sgr=33, file=sys.stderr)
 
-def print_error(*values):
-    print_fancy("Fatal error: ", *values, sgr=31)
+def print_error(*values, **kwargs):
+    print_fancy("Fatal error: ", *values, sgr=31, file=sys.stderr)
 
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
