@@ -31,5 +31,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install root
-        run: 'python3 -u .github/workflows/installroot.py'
+        run: 'python3 -u .github/workflows/rootci-installers/installroot.py'
 

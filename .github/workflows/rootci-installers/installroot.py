@@ -21,7 +21,16 @@ import shutil
 import tarfile
 import openstack
 
-from installutils import options_from_dict, download_latest, subprocess_with_log, load_config, die, print_warning, upload_file, print_fancy
+from installutils import (
+    die,
+    download_latest,
+    load_config,
+    cmake_options_from_dict,
+    print_fancy,
+    print_warning,
+    subprocess_with_log,
+    upload_file
+)
 
 
 WORKDIR = '/tmp/workspace'
@@ -36,8 +45,8 @@ def main():
 
     shell_log = ""
 
-    platform = os.environ['PLATFORM']
-    branch = os.environ['BRANCH']
+    platform    = os.environ['PLATFORM']
+    branch      = os.environ['BRANCH']
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
 
     options_dict = {
@@ -46,7 +55,7 @@ def main():
         **load_config(f'{python_script_dir}/buildconfig/{platform}.txt')
     }
     buildtype = options_dict.get('CMAKE_BUILD_TYPE', DEFAULT_BUILDTYPE)
-    options = options_from_dict(options_dict)
+    options = cmake_options_from_dict(options_dict)
 
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     prefix = f'{platform}/{branch}/{buildtype}/{option_hash}'

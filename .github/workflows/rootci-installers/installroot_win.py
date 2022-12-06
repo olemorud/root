@@ -15,7 +15,6 @@
    Writing a similar wrapper in bash is difficult because variables are
    expanded before being sent to the log wrapper in hard to predict ways. """
 
-
 import datetime
 from hashlib import sha1
 import os
@@ -23,7 +22,16 @@ import shutil
 import tarfile
 import openstack
 
-from installutils import options_from_dict, download_latest, subprocess_with_log, load_config, die, print_warning, upload_file, print_fancy
+from installutils import (
+    die,
+    download_latest,
+    load_config,
+    options_from_dict,
+    print_fancy,
+    print_warning,
+    subprocess_with_log,
+    upload_file
+)
 
 
 WORKDIR = "C:/ROOT-CI"
@@ -84,7 +92,9 @@ def main():
             print_warning(f"failed: {err}")
             incremental = False
         else:
-            shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}','{WORKDIR}')"
+            shell_log += f"""
+                (new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{tar_path}','{WORKDIR}')
+            """
 
     if incremental:
         # Do git pull and check if build is needed

@@ -94,7 +94,7 @@ def load_config(filename) -> dict:
     return options
 
 
-def options_from_dict(config: Dict[str, str]) -> str:
+def cmake_options_from_dict(config: Dict[str, str]) -> str:
     """Converts a dictionary of build options to string.
        The output is sorted alphanumerically.
 
@@ -162,10 +162,10 @@ def download_latest(connection, container: str, prefix: str, destination: str) -
 
     artifacts = [obj.name for obj in objects]
     latest = max(artifacts)
-    file = latest.split(".tar.gz")[0] + ".tar.gz"  # ugly fix because files
-    # are sometimes segmented in s3
-    # so that they end in *.tar.gz/001
+    file = latest.split(".tar.gz")[0] + ".tar.gz"  # < ugly fix because files
+                                                   # are sometimes segmented in s3
+                                                   # so that they end in *.tar.gz/001
 
     download_file(connection, container, file, f"{destination}/{file}")
 
-    return destination
+    return f"{destination}/{file}"
