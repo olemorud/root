@@ -22,11 +22,11 @@ import shutil
 import tarfile
 import openstack
 
-from installutils import (
+from build_utils import (
     die,
     download_latest,
     load_config,
-    options_from_dict,
+    cmake_options_from_dict,
     print_fancy,
     print_warning,
     subprocess_with_log,
@@ -56,7 +56,7 @@ def main():
         **load_config(f'{python_script_dir}/buildconfig/{platform}.txt')
     }
     buildtype = options_dict.get('CMAKE_BUILD_TYPE', DEFAULT_BUILDTYPE)
-    options = options_from_dict(options_dict)
+    options = cmake_options_from_dict(options_dict)
 
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     prefix = f'{platform}/{branch}/{buildtype}/{option_hash}'

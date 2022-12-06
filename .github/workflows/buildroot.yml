@@ -1,7 +1,10 @@
 
 name: 'Build ROOT multi-platform'
 
-on: workflow_dispatch
+on: 
+  workflow_dispatch:
+  schedule:
+    - cron: '0 1 * * *'
 
 jobs:
   build:
@@ -31,5 +34,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install root
-        run: 'python3 -u .github/workflows/rootci-installers/installroot.py'
+        run: 'python3 -u .github/workflows/rootci-installers/build_root.py'
 

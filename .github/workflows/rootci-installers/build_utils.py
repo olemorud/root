@@ -9,6 +9,9 @@ import subprocess
 import sys
 import time
 
+def shortspaced(string) -> str:
+    """Replaces multiple spaces with a single space"""
+    return re.sub(' +',' ', string)
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:
     """prints message using select graphic rendition, defaults to bold text
@@ -29,8 +32,8 @@ def print_error(*values, **kwargs):
 
 def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
     """Runs <command> in shell and appends <command> to log"""
-    command = re.sub(' +', ' ', command)
 
+    start: float = 0.0
     if debug:
         print_fancy(command)
         start = time.time()
@@ -43,7 +46,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
         print_fancy(f"\nFinished expression in {elapsed}\n", sgr=3)
 
     return (result.returncode,
-            log + '\n(\n' + command + '\n)')
+            log + '\n(\n' + shortspaced(command) + '\n)')
 
 
 def die(code: int, msg: str, log: str = "") -> None:
@@ -64,7 +67,8 @@ def die(code: int, msg: str, log: str = "") -> None:
         try:
             with open("/etc/motd", "w", encoding="ascii") as f:
                 f.write(error_msg)
-        except Exception: pass
+        except Exception:
+            pass
 
     sys.exit(code)
 

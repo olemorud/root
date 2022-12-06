@@ -17,19 +17,21 @@
 import datetime
 from hashlib import sha1
 import os
+import re
 import shutil
 import tarfile
 import openstack
 
-from installutils import (
+from build_utils import (
+    cmake_options_from_dict,
     die,
     download_latest,
     load_config,
-    cmake_options_from_dict,
     print_fancy,
     print_warning,
+    shortspaced,
     subprocess_with_log,
-    upload_file
+    upload_file,
 )
 
 
@@ -45,8 +47,8 @@ def main():
 
     shell_log = ""
 
-    platform    = os.environ['PLATFORM']
-    branch      = os.environ['BRANCH']
+    platform = os.environ['PLATFORM']
+    branch = os.environ['BRANCH']
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
 
     options_dict = {
@@ -65,11 +67,11 @@ def main():
         shutil.rmtree(WORKDIR)
     os.makedirs(WORKDIR)
     os.chdir(WORKDIR)
-    shell_log += f"""
+    shell_log += shortspaced("""
         rm -rf {WORKDIR}
         mkdir -p {WORKDIR}
         cd {WORKDIR}
-    """
+    """)
 
     connection = None
 
@@ -98,13 +100,13 @@ def main():
     if incremental:
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
-            cd {WORKDIR}/src || return 3
+            cd "{WORKDIR}/src" || exit 3
 
-            git fetch || return 1
+            git fetch || exit 1
 
-            test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" && return 2
+            test "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" && exit 2
 
-            git merge FETCH_HEAD || return 1
+            git merge FETCH_HEAD || exit 1
         """, shell_log)
 
         if result == 1:
@@ -122,8 +124,8 @@ def main():
         print("Doing non-incremental build")
 
         result, shell_log = subprocess_with_log(f"""
-            mkdir -p {WORKDIR}/build
-            mkdir -p {WORKDIR}/install
+            mkdir -p '{WORKDIR}/build'
+            mkdir -p '{WORKDIR}/install'
 
             git clone -b {branch} \
                       --single-branch \
