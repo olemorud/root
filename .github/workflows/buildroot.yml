@@ -4,8 +4,12 @@ name: 'Build ROOT multi-platform'
 on: 
   workflow_dispatch:
     inputs:
+      incremental:
+        description: 'Do incremental build'
+        required: false
+        default: 'true'
       force_generation:
-        description: 'Make sure generation step is always run'
+        description: 'Incremental build: Make sure generation step is always run'
         required: false
         default: 'false'
   schedule:
@@ -34,11 +38,16 @@ jobs:
         OS_REGION_NAME: 'cern'
         PLATFORM: ${{ matrix.image }}
         CONFIG: 'Release'
-        INCREMENTAL: 'true'
+        INCREMENTAL: ${{ inputs.incremental }}
     
     steps:
       - name: Checkout
         uses: actions/checkout@v3
+
+      - name: Nightly build
+        if:   github.event.schedule == '0 1 * * *'
+        run: 'INCREMENTAL=true python3 -u .github/workflows/rootci-installers/build_root.py'
+
       - name: Install root
-        run: 'python3 -u .github/workflows/rootci-installers/build_root.py --alwaysgenerate=${{ inputs.force_generation }}'
+        run:  python3 -u .github/workflows/rootci-installers/build_root.py --alwaysgenerate=${{ inputs.force_generation }}
 
