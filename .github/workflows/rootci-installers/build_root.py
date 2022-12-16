@@ -15,10 +15,12 @@
    expanded before being sent to the log wrapper in hard to predict ways. """
 
 import datetime
+import getopt
 from hashlib import sha1
 import os
 import re
 import shutil
+import sys
 import tarfile
 import openstack
 
@@ -42,6 +44,20 @@ DEFAULT_BUILDTYPE = 'Release'
 
 def main():
     # openstack.enable_logging(debug=True)
+    
+    force_generation = False
+
+    options, _ = getopt.getopt(
+        args = sys.argv[1:],
+        shortopts = '',
+        longopts = ["alwaysgenerate="]
+    )
+
+    for opt, val in options:
+        if opt == "--alwaysgenerate":
+            force_generation = val in ('true', '1', 'yes', 'on')
+            
+
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.datetime.today().strftime('%Y-%m-%d')
 
@@ -137,6 +153,8 @@ def main():
         if result != 0:
             die(result, "Could not clone from git", shell_log)
 
+
+    if force_generation or not incremental:
         result, shell_log = subprocess_with_log(f"""
             cmake -S {WORKDIR}/src \
                   -B {WORKDIR}/build \

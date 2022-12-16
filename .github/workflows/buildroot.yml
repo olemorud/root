@@ -3,8 +3,14 @@ name: 'Build ROOT multi-platform'
 
 on: 
   workflow_dispatch:
+    inputs:
+      force_generation:
+        description: 'Make sure generation step is always run'
+        required: false
+        default: 'false'
   schedule:
     - cron: '0 1 * * *'
+
 
 jobs:
   build:
@@ -34,5 +40,5 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
       - name: Install root
-        run: 'python3 -u .github/workflows/rootci-installers/build_root.py'
+        run: 'python3 -u .github/workflows/rootci-installers/build_root.py --alwaysgenerate=${{ inputs.force_generation }}'
 
