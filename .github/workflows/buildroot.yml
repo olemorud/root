@@ -23,7 +23,7 @@ jobs:
         image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
       fail-fast: false
 
-    runs-on: ubuntu-latest
+    runs-on: [self-hosted, ubuntu-latest]
 
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
