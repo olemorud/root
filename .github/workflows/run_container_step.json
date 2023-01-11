@@ -1,0 +1,15 @@
+
+{
+	"command": "run_container_step",
+	"responseFile": null,
+
+	"state": {
+		"network": "host"
+	},
+
+	"args": {
+		"workingDirectory":"/runner_workdir/",
+		"createOptions": "--network host",
+		"systemMountVolumes":[]
+	}
+}
