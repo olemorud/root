@@ -89,15 +89,14 @@ def main():
         cd {WORKDIR}
     """)
 
-    connection = None
+    print("\nEstablishing s3 connection")
+    connection = openstack.connect('envvars')
 
     if incremental:
         print("Attempting incremental build")
 
         # Download and extract previous build artifacts
         try:
-            print("\nEstablishing s3 connection")
-            connection = openstack.connect('envvars')
 
             print("\nDownloading")
             tar_path = download_latest(connection, CONTAINER, prefix, WORKDIR)
