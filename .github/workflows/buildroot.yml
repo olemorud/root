@@ -27,7 +27,7 @@ jobs:
 
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
-      options: '--pull=always -u=123 -e BRANCH=master'
+      options: '--pull=always -e BRANCH=master'
       env:
         OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -41,6 +41,9 @@ jobs:
         INCREMENTAL: ${{ inputs.incremental }}
     
     steps:
+      - name: Print debug info
+        run:  'printf "%s@%s" $(whoami) $(hostname)\\n; pwd; ls -la; ls -la /'
+
       - name: Checkout
         uses: actions/checkout@v3
 
