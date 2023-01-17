@@ -12,29 +12,30 @@ jobs:
         run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
 
       - name: Attempt illegal write operation
-        run:  'if touch /a; then false; else true; fi'
+        run:  'if touch /a; then false; fi'
 
       - name: Attempt illegal read operation
-        run:  'if cd /root; then false; else true; fi'
+        run:  'if cd /root; then false; fi'
 
   in-container:
+    needs: no-container
     strategy:
       fail-fast: false
       matrix:
-        image: ["","","","","","","","","","","","","","","","","","","","",]
+        image: ["","","","","","","","","","","","","","","","","","","",""]
 
     runs-on: [self-hosted, linux, x64]
 
     container:
       image: ubuntu
-      options: '--pull=always -v /:/mnt/test'
+      options: '-v /:/mnt/test'
 
     steps:
       - name: Print debug info
         run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
 
       - name: Attempt illegal write operation
-        run:  'if touch /a; then false; else true; fi'
+        run:  'if touch /a; then false; fi'
 
       - name: Attempt illegal read operation
-        run:  'if cd /root; then false; else true; fi'
+        run:  'if cd /root; then false; fi'
