@@ -66,13 +66,13 @@ def main():
     platform = os.environ['PLATFORM']
     branch = os.environ['BRANCH']
     incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
+    buildtype = os.environ['CMAKE_BUILD_CONFIG']
 
     options_dict = {
         **load_config(f'{python_script_dir}/buildconfig/global.txt'),
-        # has precedence
+        # below has precedence
         **load_config(f'{python_script_dir}/buildconfig/{platform}.txt')
     }
-    buildtype = options_dict.get('CMAKE_BUILD_TYPE', DEFAULT_BUILDTYPE)
     options = cmake_options_from_dict(options_dict)
 
     option_hash = sha1(options.encode('utf-8')).hexdigest()

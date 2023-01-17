@@ -38,12 +38,12 @@ jobs:
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
         PLATFORM: ${{ matrix.image }}
-        CONFIG: ${{ matrix.config }}
+        CMAKE_BUILD_CONFIG: ${{ matrix.config }}
         INCREMENTAL: ${{ inputs.incremental }}
     
     steps:
       - name: Print debug info
-        run:  'printf "%s@%s" $(whoami) $(hostname)\\n; pwd; ls -la; ls -la /'
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)"; ls -la; ls -la /'
 
       - name: Checkout
         uses: actions/checkout@v3
