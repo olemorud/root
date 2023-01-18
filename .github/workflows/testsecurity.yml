@@ -28,11 +28,14 @@ jobs:
 
     container:
       image: ubuntu
-      options: '-v /:/mnt/test'
+      options: '-v /:/mnt/test --security-opt label=disable'
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
       - name: Print debug info
-        run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
+        run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -Zla; ls -Zla /'
 
       - name: Attempt illegal write operation
         run:  'if touch /a; then false; fi'
