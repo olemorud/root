@@ -28,7 +28,7 @@ jobs:
 
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
-      options: '--pull=always -e BRANCH=master'
+      options: '--pull=always -e BRANCH=master --security-opt label=disable'
       env:
         OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
