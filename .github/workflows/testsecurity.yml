@@ -10,12 +10,15 @@ jobs:
     steps:
       - name: Print debug info
         run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -la; ls -la /'
+        if:   always()
 
       - name: Attempt illegal write operation
         run:  'if touch /a; then false; fi'
+        if:   always()
 
       - name: Attempt illegal read operation
         run:  'if cd /root; then false; fi'
+        if:   always()
 
   in-container:
     needs: no-container
@@ -31,14 +34,14 @@ jobs:
       options: '-v /:/mnt/test --security-opt label=disable'
 
     steps:
-      - name: Checkout
-        uses: actions/checkout@v3
-
       - name: Print debug info
         run:  'printf "%s@%s\\n" $(whoami) $(hostname); pwd; ls -Zla; ls -Zla /'
+        if:   always()
 
       - name: Attempt illegal write operation
-        run:  'if touch /a; then false; fi'
+        run:  'if touch /mnt/test/a; then false; fi'
+        if:   always()
 
       - name: Attempt illegal read operation
-        run:  'if cd /root; then false; fi'
+        run:  'if cd /mnt/test/root; then false; fi'
+        if:   always()
