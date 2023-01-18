@@ -43,7 +43,7 @@ jobs:
     
     steps:
       - name: Print debug info
-        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)"; ls -la; ls -la /'
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)"; ls -Zla; echo ####; ls -Zla /'
 
       - name: Checkout
         uses: actions/checkout@v3
