@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env -S python3 -u
 
 """This mainly functions as a shell script, but python is used for its
    superior control flow. An important requirement of the CI is easily
@@ -46,27 +46,33 @@ def main():
     # openstack.enable_logging(debug=True)
     
     force_generation = False
+    platform         = "centos8"
+    branch           = "master"
+    incremental      = False
+    buildtype        = "Release"
 
     options, _ = getopt.getopt(
         args = sys.argv[1:],
         shortopts = '',
-        longopts = ["alwaysgenerate="]
+        longopts = ["alwaysgenerate=", "platform=", "branch=", "incremental=", "buildtype="]
     )
 
     for opt, val in options:
         if opt == "--alwaysgenerate":
             force_generation = val in ('true', '1', 'yes', 'on')
-            
+        elif opt == "--platform":
+            platform = val
+        elif opt == "--branch":
+            branch = val
+        elif opt == "--incremental":
+            incremental = val in ('true', '1', 'yes', 'on')
+        elif opt == "--buildtype":
+            buildtype = val
 
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
     yyyymmdd = datetime.datetime.today().strftime('%Y-%m-%d')
 
     shell_log = ""
-
-    platform = os.environ['PLATFORM']
-    branch = os.environ['BRANCH']
-    incremental = os.environ['INCREMENTAL'].lower() in ['true', 'yes', 'on']
-    buildtype = os.environ['CMAKE_BUILD_CONFIG']
 
     options_dict = {
         **load_config(f'{python_script_dir}/buildconfig/global.txt'),

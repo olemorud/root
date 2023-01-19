@@ -28,7 +28,7 @@ jobs:
 
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
-      options: '--pull=always -e BRANCH=master --security-opt label=disable'
+      options: '--pull=always --security-opt label=disable'
       env:
         OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
         OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
@@ -37,9 +37,6 @@ jobs:
         OS_IDENTITY_API_VERSION: 3
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
-        PLATFORM: ${{ matrix.image }}
-        CMAKE_BUILD_CONFIG: ${{ matrix.config }}
-        INCREMENTAL: ${{ inputs.incremental }}
     
     steps:
       - name: Print debug info
@@ -50,8 +47,8 @@ jobs:
 
       - name: Nightly build
         if:   github.event.schedule == '0 1 * * *'
-        run: 'INCREMENTAL=true python3 -u .github/workflows/rootci-installers/build_root.py'
+        run: ".github/workflows/rootci-installers/build_root.py --incremental false --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master"
 
       - name: Install root
-        run:  python3 -u .github/workflows/rootci-installers/build_root.py --alwaysgenerate=${{ inputs.force_generation }}
+        run: ".github/workflows/rootci-installers/build_root.py --incremental ${{ inputs.incremental }} --alwaysgenerate ${{ inputs.force_generation }} --buildtype ${{ matrix.config }} --platform ${{ matrix.platform }} --branch master"
 
