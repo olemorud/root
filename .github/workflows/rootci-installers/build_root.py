@@ -179,22 +179,17 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
-                New-Item -Force -Type directory -Path {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
-                mkdir -p '{workdir}/src'
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            cd {workdir}/src
+            git clone '{repository}' '{workdir}/src'
             
-            git clone {repository}
-            
-            pwd
-            ls
+            cd '{workdir}/src'
             
             git checkout {base_ref}
             git rebase {head_ref} {base_ref}
