@@ -112,10 +112,10 @@ def main():
             Set-Location -LiteralPath {workdir}
         """)
     else:
-        shell_log += shortspaced("""
-            rm -rf {WORKDIR}
-            mkdir -p {WORKDIR}
-            cd {WORKDIR}
+        shell_log += shortspaced(f"""
+            rm -rf {workdir}
+            mkdir -p {workdir}
+            cd {workdir}
         """)
 
 
@@ -192,6 +192,9 @@ def main():
             cd {workdir}/src
             
             git clone {repository}
+            
+            pwd
+            ls
             
             git checkout {base_ref}
             git rebase {head_ref} {base_ref}
