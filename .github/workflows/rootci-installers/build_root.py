@@ -187,11 +187,11 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            git clone '{repository}' '{workdir}/src'
+            git clone -b {base_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'
             
-            git checkout {base_ref}
+            git fetch origin {head_ref}:{head_ref}
             git rebase {head_ref} {base_ref}
         """, shell_log)
 
