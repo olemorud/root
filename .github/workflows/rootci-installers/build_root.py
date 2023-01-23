@@ -87,12 +87,6 @@ def main():
         workdir = '/tmp/workspace'
 
 
-    # Set gituhb email and username to prevent fatal errors
-    result, shell_log = subprocess_with_log("""
-        git config --global user.email "ci@root.cern"
-        git config --global user.name "ROOT Continous Integration"
-    """)
-
 
     # Load CMake options from file
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
@@ -158,6 +152,8 @@ def main():
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
             cd "{workdir}/src" || exit 3
+            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
+            git config user.name 'ROOT Continous Integration'
 
             git fetch || exit 1
 
@@ -197,6 +193,8 @@ def main():
             git clone -b {base_ref} '{repository}' '{workdir}/src'
             
             cd '{workdir}/src'
+            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
+            git config user.name 'ROOT Continous Integration'
             
             git fetch origin {head_ref}:{head_ref}
             git rebase {head_ref} {base_ref}
