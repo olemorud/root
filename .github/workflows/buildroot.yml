@@ -56,7 +56,6 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v3
-        persists-credentials: false
 
       - name: Print debug info
         run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
