@@ -87,6 +87,13 @@ def main():
         workdir = '/tmp/workspace'
 
 
+    # Set gituhb email and username to prevent fatal errors
+    result, shell_log = subprocess_with_log("""
+        git config --global user.email "ci@root.cern"
+        git config --global user.name "ROOT Continous Integration"
+    """)
+
+
     # Load CMake options from file
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
 
