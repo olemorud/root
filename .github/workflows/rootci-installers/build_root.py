@@ -183,7 +183,7 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
-            """, shell_log, powershell=True)
+            """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
@@ -193,7 +193,7 @@ def main():
         if windows:
             result, shell_log = subprocess_with_log(f"""
                 Remove-Item -Recurse -Force {workdir}/src
-            """, shell_log, powershell=True)
+            """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 rm -rf '{workdir}/src'
