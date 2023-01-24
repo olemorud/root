@@ -84,6 +84,7 @@ def main():
 
     if windows:
         workdir = 'C:/ROOT-CI'
+        os.environ['COMSPEC'] = 'powershell.exe'
     else:
         workdir = '/tmp/workspace'
 
