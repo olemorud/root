@@ -62,6 +62,17 @@ jobs:
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 
+      - name: Install root workflow dispatch
+        if:   github.event_name == 'workflow_dispatch'
+        run: "python .github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    ${{ inputs.incremental }}
+                    --alwaysgenerate ${{ inputs.force_generation }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+
   build-linux:
     strategy:
       matrix:
