@@ -76,8 +76,8 @@ jobs:
       - name: Install root workflow dispatch
         if:   github.event_name == 'workflow_dispatch'
         run: "python .github/workflows/rootci-installers/build_root.py
-                    --buildtype      ${{ matrix.config }}
-                    --platform       ${{ matrix.image }}
+                    --buildtype      Release
+                    --platform       windows
                     --incremental    ${{ inputs.incremental }}
                     --alwaysgenerate ${{ inputs.force_generation }}
                     --base_ref       ${{ inputs.base_ref }}
