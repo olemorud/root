@@ -41,7 +41,7 @@ def subprocess_with_log(command: str, log="", debug=True, powershell=False) -> T
     print("\033[0m", end='')
 
     if powershell:
-        result = "powershell.exe" + command
+        command = "powershell.exe" + command
 
     result = subprocess.run(command, shell=True, check=False)
 
