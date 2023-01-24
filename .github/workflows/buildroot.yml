@@ -43,6 +43,14 @@ on:
   schedule:
     - cron: '0 1 * * *'
 
+env:
+  OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+  OS_AUTH_TYPE: 'v3applicationcredential'
+  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+  OS_IDENTITY_API_VERSION: 3
+  OS_INTERFACE: 'public'
+  OS_REGION_NAME: 'cern'
 
 jobs:
   build-windows:
@@ -89,14 +97,14 @@ jobs:
     container:
       image: ghcr.io/olemorud/${{ matrix.image }}:buildready
       options: '--security-opt label=disable'
-      env: # S3 storage
-        OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
-        OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
-        OS_AUTH_TYPE: 'v3applicationcredential'
-        OS_AUTH_URL: 'https://keystone.cern.ch/v3'
-        OS_IDENTITY_API_VERSION: 3
-        OS_INTERFACE: 'public'
-        OS_REGION_NAME: 'cern'
+      #env: # S3 storage
+      #  OS_APPLICATION_CREDENTIAL_ID: 'fdbb885970e547a49e3dfc339ce1efa7'
+      #  OS_APPLICATION_CREDENTIAL_SECRET: ${{ secrets.OS_APPLICATION_CREDENTIAL_SECRET }}
+      #  OS_AUTH_TYPE: 'v3applicationcredential'
+      #  OS_AUTH_URL: 'https://keystone.cern.ch/v3'
+      #  OS_IDENTITY_API_VERSION: 3
+      #  OS_INTERFACE: 'public'
+      #  OS_REGION_NAME: 'cern'
     
     steps:
       - name: Checkout
