@@ -45,7 +45,24 @@ on:
 
 
 jobs:
-  build:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Install root PR
+        if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
+        run: "python .github/workflows/rootci-installers/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       ${{ matrix.image }}
+                    --incremental    true
+                    --base_ref       ${{ github.base_ref }}
+                    --head_ref       ${{ github.head_ref }}
+                    --repository     ${{ github.server_url }}/${{github.repository}}
+              "
+
+  build-linux:
     strategy:
       matrix:
         image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
