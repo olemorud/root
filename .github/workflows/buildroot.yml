@@ -51,6 +51,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Setup windows runner
+        run: 'python -m pip install openstack'
+
       - name: Install root PR
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: "python .github/workflows/rootci-installers/build_root.py
