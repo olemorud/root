@@ -162,10 +162,7 @@ def main():
     if incremental:
         # Do git pull and check if build is needed
         result, shell_log = subprocess_with_log(f"""
-            cd "{workdir}/src" || exit 1
-            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
-            git config user.name 'ROOT Continous Integration'
-
+            cd '{workdir}/src' || exit 1
             git checkout master
 
             git branch -D test_base
@@ -190,38 +187,40 @@ def main():
 
         if windows:
             result, shell_log = subprocess_with_log(f"""
-                New-Item -Force -Type directory -Path {workdir}/build
-                New-Item -Force -Type directory -Path {workdir}/install
-                Remove-Item -Force -Recurse {workdir}/src
-                New-Item -Force -Type directory -Path {workdir}/src
+                Remove-Item -Force -Recurse {workdir}
+                New-Item -Force -Type directory -Path {workdir}
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
-                mkdir -p '{workdir}/build'
-                mkdir -p '{workdir}/install'
-                rm -rf '{workdir}/src'
-                mkdir -p '{workdir}/src'
+                rm -rf "{workdir}/*"
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
             cd '{workdir}/src'
             git init . || exit 1
             
-            git config user.email 'CI-{yyyy_mm_dd}@root.cern'
-            git config user.name 'ROOT Continous Integration'
-            
             git remote add origin '{repository}' || exit 2
-            
-            git fetch origin {base_ref}:test_base || exit 3
-            git fetch origin {head_ref}:test_head || exit 4
-            
-            git checkout test_head || exit 5
-            git rebase test_base || exit 6
-            
         """, shell_log)
 
         if result != 0:
-            die(result, "Failed to clone/rebase", shell_log)
+            die(result, "Failed to pull", shell_log)
+
+
+    # Rebase
+    result, shell_log = subprocess_with_log(f"""
+        cd '{workdir}/src' || exit 1
+            
+        git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
+        git config user.name 'ROOT Continous Integration'
+        
+        git branch -D test_base
+        git branch -D test_head
+        git fetch origin {base_ref}:test_base || exit 2
+        git fetch origin {head_ref}:test_head || exit 3
+        
+        git checkout test_head || exit 4
+        git rebase test_base || exit 5
+    """)
 
 
     if force_generation or not incremental:
