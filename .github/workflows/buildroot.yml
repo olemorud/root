@@ -63,7 +63,7 @@ jobs:
                     --platform       windows
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
-                    --head_ref       ${{ github.head_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 
@@ -95,7 +95,7 @@ jobs:
                     --platform       mac12
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
-                    --head_ref       ${{ github.head_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 
@@ -183,7 +183,7 @@ jobs:
                     --platform       ${{ matrix.image }}
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
-                    --head_ref       ${{ github.head_ref }}
+                    --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 

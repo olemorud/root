@@ -157,20 +157,16 @@ def main():
             git config user.email 'CI-{yyyy_mm_dd}@root.cern'
             git config user.name 'ROOT Continous Integration'
 
-            git fetch --all || exit 2
             git checkout master
 
-            git branch -D test_{base_ref}
-            git branch -D test_{head_ref}
+            git branch -D test_base
+            git fetch origin {base_ref}:test_base || exit 2
+            git branch -D test_head
+            git fetch origin {head_ref}:test_head || exit 3
 
-            git checkout -b test_{base_ref} origin/{base_ref} || exit 3
+            git checkout test_head || exit 4
 
-            if [ "{base_ref}" != "{head_ref}" ]; then
-                git checkout -b test_{head_ref} origin/{head_ref} || exit 4
-                git rebase {base_ref} || exit 5
-            fi
-
-
+            git rebase test_base || exit 5
         """, shell_log)
 
         if result == 1:
@@ -207,14 +203,11 @@ def main():
             
             git remote add origin '{repository}' || exit 2
             
-            git fetch --all
+            git fetch origin {base_ref}:test_base || exit 3
+            git fetch origin {head_ref}:test_head || exit 4
             
-            git checkout -b test_{base_ref} origin/{base_ref} || exit 3
-            
-            if [ "{base_ref}" != "{head_ref}" ]; then
-                git checkout -b test_{head_ref} origin/{head_ref} || exit 4
-                git rebase test_{base_ref} || exit 5
-            fi
+            git checkout test_head || exit 5
+            git rebase test_base || exit 6
             
         """, shell_log)
 
