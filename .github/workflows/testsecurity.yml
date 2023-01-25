@@ -45,3 +45,7 @@ jobs:
       - name: Attempt illegal read operation
         run:  'if cd /mnt/test/root > /dev/null; then false; fi'
         if:   always()
+        
+      - name: This should not run
+        run:  echo haha
+        if:   always()
