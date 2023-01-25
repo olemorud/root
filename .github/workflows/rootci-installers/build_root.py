@@ -129,7 +129,12 @@ def main():
     # Attempt openstack connection even on non-incremental builds to upload later
     print("\nEstablishing s3 connection")
     # openstack.enable_logging(debug=True)
-    connection = openstack.connect('envvars')
+    connection = None
+    try:
+        connection = openstack.connect('envvars')
+    except Exception as err:
+        print_warning("Could not connect to openstack:", err)
+        incremental = False
 
 
     if incremental:
@@ -164,8 +169,8 @@ def main():
             git checkout master
 
             git branch -D test_base
-            git fetch origin {base_ref}:test_base || exit 2
             git branch -D test_head
+            git fetch origin {base_ref}:test_base || exit 2
             git fetch origin {head_ref}:test_head || exit 3
 
             git checkout test_head || exit 4
