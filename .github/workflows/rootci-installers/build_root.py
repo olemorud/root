@@ -80,6 +80,10 @@ def main():
         print_warning("fatal: base_ref or head_ref not specified")
         sys.exit(1)
 
+    print("Rebasing and building ROOT using:")
+    print("head_ref: ", head_ref)
+    print("base_ref: ", base_ref)
+
     windows = 'windows' in platform
 
     if windows:
