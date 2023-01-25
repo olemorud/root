@@ -207,6 +207,8 @@ def main():
             
             git remote add origin '{repository}' || exit 2
             
+            git fetch --all
+            
             git checkout -b test_{base_ref} origin/{base_ref} || exit 3
             
             if [ "{base_ref}" != "{head_ref}" ]; then
