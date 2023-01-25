@@ -159,10 +159,13 @@ def main():
             
             git fetch --all || exit 2
             git checkout master
+            
             git branch -D test_{base_ref}
-            git branch -D test_{head_ref}
             git checkout -b test_{base_ref} origin/{base_ref} || exit 3
+            
+            git branch -D test_{head_ref}
             git checkout -b test_{head_ref} origin/{head_ref} || exit 4
+            
             git rebase {base_ref} || exit 6
             
         """, shell_log)
