@@ -165,10 +165,11 @@ def main():
 
             git checkout -b test_{base_ref} origin/{base_ref} || exit 3
 
-            [ "{base_ref}" != "{head_ref}" ] && \
+            if [ "{base_ref}" != "{head_ref}" ]; then
                 git checkout -b test_{head_ref} origin/{head_ref} || exit 4
+                git rebase {base_ref} || exit 5
+            fi
 
-            git rebase {base_ref} || exit 5
 
         """, shell_log)
 
@@ -208,10 +209,11 @@ def main():
             
             git checkout -b test_{base_ref} origin/{base_ref} || exit 3
             
-            [ "{base_ref}" != "{head_ref}" ] && \
+            if [ "{base_ref}" != "{head_ref}" ]; then
                 git checkout -b test_{head_ref} origin/{head_ref} || exit 4
+                git rebase test_{base_ref} || exit 5
+            fi
             
-            git rebase test_{base_ref} || exit 5
         """, shell_log)
 
         if result != 0:
