@@ -184,12 +184,14 @@ def main():
             result, shell_log = subprocess_with_log(f"""
                 New-Item -Force -Type directory -Path {workdir}/build
                 New-Item -Force -Type directory -Path {workdir}/install
+                Remove-Item -Force -Recurse {workdir}/src
                 New-Item -Force -Type directory -Path {workdir}/src
             """, shell_log)
         else:
             result, shell_log = subprocess_with_log(f"""
                 mkdir -p '{workdir}/build'
                 mkdir -p '{workdir}/install'
+                rm -rf '{workdir}/src'
                 mkdir -p '{workdir}/src'
             """, shell_log)
 
