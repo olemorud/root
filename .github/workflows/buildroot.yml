@@ -152,8 +152,10 @@ jobs:
         run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
                ls -Zla .;
                echo event: ${{ github.event_name }};
-               echo head:  ${{ github.head_ref }};
-               echo base:  ${{ github.base_ref }};
+               echo head: ${{ github.head_ref }};
+               echo base: ${{ github.base_ref }};
+               echo ref: ${{ github.ref }};
+               echo actor: ${{ github.actor }};
               '
 
       - name: Nightly build
