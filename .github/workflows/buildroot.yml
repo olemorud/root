@@ -148,6 +148,11 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v3
 
+      - name: Dump GitHub context
+        env:
+          GITHUB_CONTEXT: ${{ toJSON(github) }}
+        run: echo "$GITHUB_CONTEXT"
+
       - name: Print debug info
         run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
                ls -Zla .;
