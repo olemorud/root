@@ -156,6 +156,8 @@ jobs:
                echo base: ${{ github.base_ref }};
                echo ref: ${{ github.ref }};
                echo actor: ${{ github.actor }};
+               echo pull request: ${{ github.event.pull_request }};
+               echo pull request head: ${{ github.event.pull_request.head }};
               '
 
       - name: Nightly build
