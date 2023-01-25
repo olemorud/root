@@ -127,6 +127,7 @@ jobs:
                     --base_ref    master
                     --head_ref    master
                     --repository  ${{ github.server_url }}/${{github.repository}}
+              "
 
   build-linux:
     strategy:
