@@ -199,11 +199,11 @@ def main():
         
         git branch -D test_base
         git branch -D test_head
-        git fetch origin {base_ref}:test_base || exit 2
-        git fetch origin {head_ref}:test_head || exit 3
+        git fetch origin {base_ref}:base || exit 2
+        git fetch origin {head_ref}:{head_ref} || exit 3
         
-        git checkout test_head || exit 4
-        git rebase test_base || exit 5
+        git checkout {head_ref} || exit 4
+        git rebase base || exit 5
     """, shell_log)
 
     if result != 0:
