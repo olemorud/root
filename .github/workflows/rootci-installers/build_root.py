@@ -175,9 +175,9 @@ def main():
             """, shell_log)
 
         result, shell_log = subprocess_with_log(f"""
-            cd '{workdir}/src'
-            git init . || exit 1
-            git remote add origin '{repository}' || exit 2
+            git init '{workdir}/src' || exit 1
+            cd '{workdir}/src' || exit 2
+            git remote add origin '{repository}' || exit 3
         """, shell_log)
 
         if result != 0:
