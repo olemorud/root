@@ -9,6 +9,7 @@ on:
 jobs:
   trigger_builds:
     strategy:
+      fail-fast: false
       matrix:
         branch: ["master", "latest-stable", "v5-34-00-patches", "v6-18-00-patches","v6-20-00-patches",
                  "v6-22-00-patches","v6-24-00-patches", "v6-26-00-patches","v6-28-00-patches"]
