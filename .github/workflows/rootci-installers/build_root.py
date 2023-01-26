@@ -93,7 +93,6 @@ def main():
         workdir = '/tmp/workspace'
 
 
-
     # Load CMake options from file
     python_script_dir = os.path.dirname(os.path.abspath(__file__))
 
@@ -137,6 +136,7 @@ def main():
         incremental = False
 
 
+    # Download and extract previous build artifacts
     if incremental:
         print("Attempting incremental build")
 
@@ -159,27 +159,6 @@ def main():
             print_warning(f"failed: {err}")
             incremental = False
 
-    if incremental:
-        # Do git pull and check if build is needed
-        result, shell_log = subprocess_with_log(f"""
-            cd '{workdir}/src' || exit 1
-            git checkout master
-
-            git branch -D test_base
-            git branch -D test_head
-            git fetch origin {base_ref}:test_base || exit 2
-            git fetch origin {head_ref}:test_head || exit 3
-
-            git checkout test_head || exit 4
-
-            git rebase test_base || exit 5
-        """, shell_log)
-
-        if result == 1:
-            print_warning('No src directory found, assuming corrupt build artifacts. Doing non-incremental build')
-            incremental = False
-        elif result != 0:
-            die(result, "rebase failed", shell_log)
 
     # Clone and run generation step on non-incremental builds
     if not incremental:
@@ -198,7 +177,6 @@ def main():
         result, shell_log = subprocess_with_log(f"""
             cd '{workdir}/src'
             git init . || exit 1
-            
             git remote add origin '{repository}' || exit 2
         """, shell_log)
 
@@ -213,6 +191,8 @@ def main():
         git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
         git config user.name 'ROOT Continous Integration'
         
+        git checkout master
+        
         git branch -D test_base
         git branch -D test_head
         git fetch origin {base_ref}:test_base || exit 2
@@ -220,8 +200,10 @@ def main():
         
         git checkout test_head || exit 4
         git rebase test_base || exit 5
-    """)
+    """, shell_log)
 
+    if result != 0:
+        die(result, "Rebase failed", shell_log)
 
     if force_generation or not incremental:
         result, shell_log = subprocess_with_log(f"""
@@ -234,20 +216,18 @@ def main():
         if result != 0:
             die(result, "Failed cmake generation step", shell_log)
 
+
     # Build
     cpus = os.cpu_count()
 
-    if windows:
-        result, shell_log = subprocess_with_log(f"""
-            cmake --build {workdir}/build --config {buildtype}
-        """, shell_log)
-    else:
-        result, shell_log = subprocess_with_log(f"""
-            cmake --build {workdir}/build -- -j"{cpus}"
-        """, shell_log)
+    result, shell_log = subprocess_with_log(
+        f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{cpus}'",
+        shell_log
+    )
 
     if result != 0:
         die(result, "Build step failed", shell_log)
+
 
     # Upload and archive
     if connection:
