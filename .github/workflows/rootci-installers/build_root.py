@@ -195,7 +195,8 @@ def main():
         git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
         git config user.name 'ROOT Continous Integration'
         
-        git checkout master
+        git branch -D temp
+        git checkout -b temp
         
         git branch -D test_base
         git branch -D test_head
