@@ -13,7 +13,7 @@ jobs:
       matrix:
         branch: ["master", "asd"]
     
-    uses: ./.github/workflows/buildroot.yml@master
+    uses: ./.github/workflows/buildroot.yml
     with:
       base_ref: ${{ matrix.branch }}
       head_ref: ${{ matrix.branch }}
