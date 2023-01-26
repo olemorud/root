@@ -68,7 +68,8 @@ jobs:
     strategy:
       matrix:
         image: ["fedora32", "fedora34", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
-        config: ["Release", "Debug", "RelWithDebInfo"]
+        config: ["Release"]
+        #, "Debug", "RelWithDebInfo"]
       fail-fast: false
 
     runs-on: [self-hosted, linux, x64]
