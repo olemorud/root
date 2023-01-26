@@ -243,7 +243,6 @@ def main():
         try:
             with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=4) as targz:
                 targz.add("src")
-                targz.add("install")
                 targz.add("build")
 
             upload_file(
