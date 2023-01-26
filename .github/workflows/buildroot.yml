@@ -85,6 +85,7 @@ jobs:
         OS_IDENTITY_API_VERSION: 3
         OS_INTERFACE: 'public'
         OS_REGION_NAME: 'cern'
+        PYTHONUNBUFFERED: true
     
     steps:
       - name: Checkout

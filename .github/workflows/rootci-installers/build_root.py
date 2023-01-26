@@ -1,4 +1,4 @@
-#!/usr/bin/env -S python3 -u
+#!/usr/bin/env python3
 
 """This mainly functions as a shell script, but python is used for its
    superior control flow. An important requirement of the CI is easily
@@ -199,7 +199,7 @@ def main():
         git checkout -b temp
         
         git branch -D test_base
-        git branch -D test_head
+        git branch -D {head_ref}
         git fetch origin {base_ref}:base || exit 2
         git fetch origin {head_ref}:{head_ref} || exit 3
         
