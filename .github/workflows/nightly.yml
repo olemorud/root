@@ -8,16 +8,14 @@ on:
 
 jobs:
   trigger_builds:
-    runs-on: ubuntu-latest
-
     strategy:
       matrix:
         branch: ["master", "asd"]
     
     uses: ./.github/workflows/buildroot.yml
-      with:
-        base_ref: ${{ matrix.branch }}
-        head_ref: ${{ matrix.branch }}
-        incremental: true
-        force_generation: true
-      secrets: inherit
+    with:
+      base_ref: ${{ matrix.branch }}
+      head_ref: ${{ matrix.branch }}
+      incremental: true
+      force_generation: true
+    secrets: inherit
