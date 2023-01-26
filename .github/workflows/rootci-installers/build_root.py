@@ -18,6 +18,7 @@ import datetime
 import getopt
 from hashlib import sha1
 import os
+import re
 import shutil
 import sys
 import tarfile
@@ -76,9 +77,12 @@ def main():
         elif opt == "--repository":
             repository = val
 
-    if not base_ref or not head_ref:
-        print_warning("fatal: base_ref or head_ref not specified")
-        sys.exit(1)
+    if not base_ref:
+        die(1, "base_ref not specified")
+    
+    if (head_ref == base_ref) or not head_ref:
+        print_warning("head_ref not specified or same as base_ref, building base_ref only")
+        head_ref = base_ref
 
     print("Rebasing and building ROOT using:")
     print("head_ref: ", head_ref)
@@ -144,7 +148,7 @@ def main():
         try:
             print("\nDownloading")
             option_hash = sha1(options.encode('utf-8')).hexdigest()
-            prefix = f'{platform}/{head_ref}-to-{base_ref}/{buildtype}/{option_hash}'
+            prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
             tar_path = download_latest(connection, CONTAINER, prefix, workdir)
 
             print("\nExtracting archive")
@@ -229,8 +233,11 @@ def main():
         die(result, "Build step failed", shell_log)
 
 
-    # Upload and archive
-    if connection:
+    # Archive and upload if building release branch
+    # TODO: find branches dynamically with `git branch``
+    release_branches = r'master|latest-stable|v.*?-.*?-.*?-patches'
+    
+    if connection and base_ref == head_ref and re.match(release_branches, base_ref):
         print("Archiving build artifacts")
         new_archive = f"{yyyy_mm_dd}.tar.gz"
         try:
