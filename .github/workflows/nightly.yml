@@ -1,0 +1,19 @@
+
+
+on:
+  schedule:
+    - cron: '0 1 * * *'
+  workflow_dispatch:
+
+jobs:
+  trigger_builds:
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        branch: ["master", "asd"]
+    
+    uses: ./.github/workflows/buildroot.yml@master
+    with:
+      branch: ${{ matrix.branch }}
+    secrets: inherit
