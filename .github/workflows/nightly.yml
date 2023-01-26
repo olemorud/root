@@ -15,5 +15,8 @@ jobs:
     
     uses: ./.github/workflows/buildroot.yml@master
     with:
-      branch: ${{ matrix.branch }}
+      base_ref: ${{ matrix.branch }}
+      head_ref: ${{ matrix.branch }}
+      incremental: true
+      force_generation: true
     secrets: inherit

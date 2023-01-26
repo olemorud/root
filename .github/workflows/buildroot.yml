@@ -2,6 +2,34 @@
 name: 'Build ROOT multi-platform'
 
 on:
+  # Allows nightly builds to trigger one run for each branch easily
+  workflow_call:
+    inputs:
+      head_ref:
+        type: string
+        required: true
+        default: master
+      base_ref:
+        type: string
+        required: true
+        default: master
+      incremental:
+        type: boolean
+        required: true
+        default: true
+      force_generation:
+        type: boolean
+        required: false
+        default: false
+
+  # PR
+  pull_request_target:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+  
   # Enables manual start of workflow
   workflow_dispatch:
     inputs:
@@ -25,17 +53,6 @@ on:
         type: boolean
         required: false
         default: false
-
-  pull_request_target:
-    branches:
-      - '**'
-    paths-ignore:
-      - 'doc/**'
-      - 'documentation/**'
-
-  # Nightly build
-  schedule:
-    - cron: '0 1 * * *'
 
 env:
   OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
@@ -89,17 +106,6 @@ jobs:
                echo pull request head: ${{ github.event.pull_request.head }};
               '
 
-      - name: Nightly build
-        if:   github.event.schedule == '0 1 * * *'
-        run: ".github/workflows/rootci-installers/build_root.py
-                    --buildtype   ${{ matrix.config }}
-                    --platform    ${{ matrix.image }}
-                    --incremental false
-                    --base_ref    master
-                    --head_ref    master
-                    --repository  ${{ github.server_url }}/${{github.repository}}
-              "
-
       - name: Install root PR
         if:   github.event_name == 'pull_request' || github.event_name == 'pull_request_target'
         run: ".github/workflows/rootci-installers/build_root.py
@@ -111,8 +117,8 @@ jobs:
                     --repository     ${{ github.server_url }}/${{github.repository}}
               "
 
-      - name: Install root workflow dispatch
-        if:   github.event_name == 'workflow_dispatch'
+      - name: Install root workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
