@@ -10,7 +10,10 @@ jobs:
   trigger_builds:
     strategy:
       matrix:
-        branch: ["master", "asd"]
+        branch: ["latest-stable", "v5-34-00-patches", "v6-06-00-patches", "v6-08-00-patches",
+                 "v6-10-00-patches","v6-12-00-patches","v6-14-00-patches","v6-16-00-patches",
+                 "v6-18-00-patches","v6-20-00-patches","v6-22-00-patches","v6-24-00-patches",
+                 "v6-26-00-patches","v6-28-00-patches"]
     
     uses: ./.github/workflows/buildroot.yml
     with:
