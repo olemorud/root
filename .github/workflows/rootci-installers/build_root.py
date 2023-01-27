@@ -268,7 +268,7 @@ def main():
             git config user.name 'ROOT Continous Integration'
             
             git fetch origin {head_ref}:{head_ref} || exit 2
-            git checkout -B {head_ref}  origin/{base_ref}|| exit 3
+            git checkout -B {head_ref}  origin/{head_ref}|| exit 3
             
             git rebase {base_ref} || exit 5
         """, shell_log)
