@@ -1,9 +1,7 @@
 
-name: Trigger nightlies
+name: Trigger build on every branch
 
 on:
-  schedule:
-    - cron: '0 1 * * *'
   workflow_dispatch:
 
 jobs:
@@ -23,5 +21,4 @@ jobs:
       base_ref: ${{ matrix.branch }}
       head_ref: ${{ matrix.branch }}
       incremental: true
-      force_generation: true
     secrets: inherit

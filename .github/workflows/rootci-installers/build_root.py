@@ -1,5 +1,7 @@
 #!/usr/bin/env python3
 
+# pylint: disable=broad-except,missing-function-docstring,line-too-long
+
 """This mainly functions as a shell script, but python is used for its
    superior control flow. An important requirement of the CI is easily
    reproducible builds, therefore a wrapper is made for running shell
@@ -9,16 +11,13 @@
    reproduce the build when pasted into a shell. Therefore all file system
    modifying code not executed from shell needs a shell equivalent
    explicitly appended to the shell log.
-      e.g. `os.chdir(x)` requires `cd x` to be appended to the shell log
-
-   Writing a similar wrapper in bash is difficult because variables are
-   expanded before being sent to the log wrapper in hard to predict ways. """
+      e.g. `os.chdir(x)` requires `cd x` to be appended to the shell log  """
 
 import datetime
-import getopt
 from hashlib import sha1
 import os
 import re
+import argparse
 import shutil
 import sys
 import tarfile
@@ -29,76 +28,75 @@ from build_utils import (
     die,
     download_latest,
     load_config,
-    print_warning,
-    shortspaced,
+    print_shell_log,
+    warning,
     subprocess_with_log,
     upload_file,
 )
 
-
-CONTAINER = 'ROOT-build-artifacts'
-DEFAULT_BUILDTYPE = 'Release'
-
+S3CONTAINER = 'ROOT-build-artifacts'
 
 def main():
+    # openstack.enable_logging(debug=True)
     shell_log = ''
     yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
-    num_cores = os.cpu_count()
+    python_script_dir = os.path.dirname(os.path.abspath(__file__))
 
-    # CLI arguments with defaults
-    repository       = 'https://github.com/root-project/root'
-    platform         = "centos8"
-    incremental      = False
-    buildtype        = "Release"
-    head_ref         = None
-    base_ref         = None
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--platform",    default="centos8", help="Platform to build on")
+    parser.add_argument("--incremental", default=False,     help="Do incremental build")
+    parser.add_argument("--buildtype",   default="Release", help="Release, Debug or RelWithDebInfo")
+    parser.add_argument("--base_ref",    default=None,      help="Ref to target branch")
+    parser.add_argument("--head_ref",    default=None,      help="Ref to feature branch")
+    parser.add_argument("--repository",  default="https://root-project/root",
+                        help="url to repository")
 
-    options, _ = getopt.getopt(
-        args = sys.argv[1:],
-        shortopts = '',
-        longopts = ["alwaysgenerate=", "platform=", "incremental=", "buildtype=",
-                    "head_ref=", "base_ref=", "repository="]
-    )
+    args = parser.parse_args()
 
-    for opt, val in options:
-        if opt == "--platform":
-            platform = val
-        elif opt == "--incremental":
-            incremental = val in ('true', '1', 'yes', 'on')
-        elif opt == "--buildtype":
-            buildtype = val
-        elif opt == "--head_ref":
-            head_ref = val
-        elif opt == "--base_ref":
-            base_ref = val
-        elif opt == "--repository":
-            repository = val
+    platform    = args.platform
+    incremental = args.incremental.lower() in ('yes', 'true', '1', 'on')
+    buildtype   = args.buildtype
+    base_ref    = args.base_ref
+    head_ref    = args.head_ref
+    repository  = args.repository
 
     if not base_ref:
         die(1, "base_ref not specified")
 
-    if (head_ref == base_ref) or not head_ref:
-        print_warning("head_ref not specified or same as base_ref, building base_ref only")
+    if not head_ref or (head_ref == base_ref):
+        warning("head_ref not specified or same as base_ref, building base_ref only")
+        rebase = False
         head_ref = base_ref
+    else:
+        rebase = True
 
-    print("Rebasing and building ROOT using:")
-    print("head_ref: ", head_ref)
-    print("base_ref: ", base_ref)
-
-    windows = 'windows' in platform
-
-    if windows:
-        archive_compress_level = 1
+    if os.name == 'nt':
+        # windows
+        compressionlevel = 1
         workdir = 'C:/ROOT-CI'
         os.environ['COMSPEC'] = 'powershell.exe'
+        result, shell_log = subprocess_with_log(f"""
+            Remove-Item -Recurse -Force -Path {workdir}
+            New-Item -Force -Type directory -Path {workdir}
+            Set-Location -LiteralPath {workdir}
+        """, shell_log)
     else:
-        archive_compress_level = 6
+        # mac/linux/POSIX
+        compressionlevel = 6
         workdir = '/tmp/workspace'
+        result, shell_log = subprocess_with_log(f"""
+            mkdir -p {workdir}
+            rm -rf {workdir}/*
+            cd {workdir}
+        """, shell_log)
 
+    if result != 0:
+        die(result, "Failed to clean up previous artifacts", shell_log)
+
+    os.chdir(workdir)
+    shell_log += f"\ncd {workdir}\n"
 
     # Load CMake options from file
-    python_script_dir = os.path.dirname(os.path.abspath(__file__))
-
     options_dict = {
         **load_config(f'{python_script_dir}/buildconfig/global.txt'),
         # below has precedence
@@ -106,56 +104,32 @@ def main():
     }
     options = cmake_options_from_dict(options_dict)
 
-
-    # Clean up previous builds
-    if os.path.exists(workdir):
-        shutil.rmtree(workdir)
-
-    os.makedirs(workdir)
-    os.chdir(workdir)
-
-    if windows:
-        shell_log += shortspaced(f"""
-            Remove-Item -Recurse -Force -Path {workdir}
-            New-Item -Force -Type directory -Path {workdir}
-            Set-Location -LiteralPath {workdir}
-        """)
-    else:
-        shell_log += shortspaced(f"""
-            rm -rf {workdir}/*
-            cd {workdir}
-        """)
-
+    option_hash = sha1(options.encode('utf-8')).hexdigest()
+    s3_prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
 
     print("\nEstablishing s3 connection")
-    # openstack.enable_logging(debug=True)
     connection = openstack.connect('envvars')
     # without openstack we can't run test workflow, might as well give up here ¯\_(ツ)_/¯
     if not connection:
         die(msg="Could not connect to OpenStack")
 
-
     # Download and extract previous build artifacts
     if incremental:
         print("Attempting incremental build")
 
-        # Download and extract previous build artifacts
         try:
             print("\nDownloading")
-            option_hash = sha1(options.encode('utf-8')).hexdigest()
-            prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
-            tar_path = download_latest(connection, CONTAINER, prefix, workdir)
+            tar_path, shell_log = download_latest(connection, S3CONTAINER, s3_prefix, workdir, shell_log)
 
             print("\nExtracting archive")
             with tarfile.open(tar_path) as tar:
                 tar.extractall()
-
-            if windows:
-                shell_log += f"(new-object System.Net.WebClient).DownloadFile('https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz','{workdir}')"
-            else:
-                shell_log += f"wget https://s3.cern.ch/swift/v1/{CONTAINER}/{prefix}.tar.gz -x -nH --cut-dirs 3"
+            shell_log += f'\ntar -xf {tar_path}\n'
         except Exception as err:
-            print_warning(f"failed: {err}")
+            warning("failed to download/extract:", err)
+            shutil.rmtree(f'{workdir}/src', ignore_errors=True)
+            shutil.rmtree(f'{workdir}/build', ignore_errors=True)
+
             incremental = False
 
 
@@ -163,20 +137,8 @@ def main():
     if not incremental:
         print("Doing non-incremental build")
 
-        if windows:
-            result, shell_log = subprocess_with_log(f"""
-                Remove-Item -Force -Recurse {workdir}
-                New-Item -Force -Type directory -Path {workdir}
-            """, shell_log)
-        else:
-            result, shell_log = subprocess_with_log(f"""
-                rm -rf "{workdir}/*"
-            """, shell_log)
-
         result, shell_log = subprocess_with_log(f"""
-            git init '{workdir}/src' || exit 1
-            cd '{workdir}/src' || exit 2
-            git remote add origin '{repository}' || exit 3
+            git clone --branch {base_ref} --single-branch {repository} "{workdir}/src"
         """, shell_log)
 
         if result != 0:
@@ -184,128 +146,133 @@ def main():
 
 
     # First: fetch, build and upload base branch. Skipped if existing artifacts
-    #   are up to date
+    # are up to date with upstream
     #
     # Makes some builds marginally slower but populates the artifact storage
-    # which makes most builds much much faster
+    # which makes subsequent builds much much faster
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/src' || exit 1
         
-        git checkout temp 2>/dev/null || git checkout -b temp
+        git checkout {base_ref} || exit 2
         
-        git fetch origin {base_ref}:{base_ref} || exit 2
-        git checkout -B {base_ref} origin/{base_ref} || exit 3
+        git fetch
+        
+        echo "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')"
         
         if [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" ]; then
             exit 123
         fi
+        
+        git reset --hard @{{u}} || exit 4
     """, shell_log)
 
-    skipbuild = False
-
-    if result == 123:
-        print("Existing build artifacts already up to date, skipping this build step")
-        skipbuild = True
-    elif result != 0:
+    if result not in (0, 123):
         die(result, f"Failed to pull {base_ref}", shell_log)
 
-    if not skipbuild:
-        if not incremental:
-            result, shell_log = subprocess_with_log(
-                f"cmake -S '{workdir}/src' -B '{workdir}/build' {options}",
-                shell_log
-            )
+    if not incremental or result != 123:
+        shell_log = build_base(base_ref, incremental, workdir, options, buildtype, shell_log)
 
-            if result != 0:
-                die(result, "Failed cmake generation step", shell_log)
-
-        result, shell_log = subprocess_with_log(
-            f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{num_cores}'",
-            shell_log
-        )
-
-        if result != 0:
-            die(result, f"Failed to build {base_ref}", shell_log)
-
-        release_branches = r'master|latest-stable|v.*?-.*?-.*?-patches'
+        release_branches = r'master|latest-stable|v.+?-.+?-.+?-patches'
 
         if not re.match(release_branches, base_ref):
-            print_warning("{base_ref} is not a release branch, skipping artifact upload")
-        elif not connection:
-            print_warning("Could not connect to OpenStack, skipping artifact upload")
+            warning("{base_ref} is not a release branch, skipping artifact upload")
         else:
-            print(f"Archiving build artifacts of {base_ref}")
-            new_archive = f"{yyyy_mm_dd}.tar.gz"
             try:
-                with tarfile.open(name = f"{workdir}/{new_archive}",
-                                  mode = "x:gz",
-                                  compresslevel = archive_compress_level) as targz:
-                    targz.add("src")
-                    targz.add("build")
-
-                upload_file(
-                    connection=connection,
-                    container=CONTAINER,
-                    name=f"{prefix}/{new_archive}",
-                    path=f"{workdir}/{new_archive}"
-                )
-            except tarfile.TarError as err:
-                print_warning("could not tar artifacts: ", {err})
+                print(f"Archiving build artifacts of {base_ref}")
+                archive_and_upload(yyyy_mm_dd, workdir, connection, compressionlevel, s3_prefix)
             except Exception as err:
-                print_warning("failed to archive/upload artifacts: ", {err})
+                warning("failed to archive/upload artifacts: ", err)
+        print(f"Successfully built branch {base_ref}")
 
-    if head_ref != base_ref:
-        # Rebase PR branch
-        print(f"Rebasing {head_ref} onto {base_ref}...")
+    if not rebase:
+        print(f"Successfully built {base_ref}!")
+        print_shell_log(shell_log)
+        sys.exit(0)
 
+    shell_log = rebase_and_build(base_ref, head_ref, buildtype, workdir, shell_log)
+
+    try:
+        print("Archiving build artifacts to run tests in a new workflow")
+        if "pull" in head_ref:
+            name = "pr-" + head_ref.split('/')[-2]
+        else:
+            name = head_ref
+        test_prefix = f'to-test/{name}/{platform}/{buildtype}/{option_hash}'
+        archive_and_upload(f"test{yyyy_mm_dd}", workdir, connection, compressionlevel, test_prefix)
+    except Exception as err:
+        warning("failed to archive/upload artifacts: ", err)
+
+    print_shell_log(shell_log)
+
+
+def archive_and_upload(archive_name, workdir, connection, compressionlevel, prefix):
+    new_archive = f"{archive_name}.tar.gz"
+
+    with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=compressionlevel) as targz:
+        targz.add("src")
+        targz.add("build")
+
+    upload_file(
+        connection=connection,
+        container=S3CONTAINER,
+        name=f"{prefix}/{new_archive}",
+        path=f"{workdir}/{new_archive}"
+    )
+
+
+def build_base(base_ref, incremental, workdir, options, buildtype, shell_log) -> str:
+    if not incremental:
         result, shell_log = subprocess_with_log(f"""
-            cd '{workdir}/src' || exit 1
-                
-            git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
-            git config user.name 'ROOT Continous Integration'
-            
-            git fetch origin {head_ref}:head || exit 2
-            git checkout head || exit 3
-            
-            git rebase {base_ref} || exit 5
+            mkdir -p '{workdir}/build'
+            cmake -S '{workdir}/src' -B '{workdir}/build' {options}
         """, shell_log)
 
         if result != 0:
-            die(result, "Rebase failed", shell_log)
+            die(result, "Failed cmake generation step", shell_log)
 
-        # Rebuild after rebase
-        result, shell_log = subprocess_with_log(
-            f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{num_cores}'",
-            shell_log
-        )
+    result, shell_log = subprocess_with_log(f"""
+        mkdir -p {workdir}/build
+        cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{os.cpu_count()}'
+    """, shell_log)
 
-        if result != 0:
-            die(result, "Build step after rebase failed", shell_log)
+    if result != 0:
+        die(result, f"Failed to build {base_ref}", shell_log)
+
+    return shell_log
 
 
+def rebase_and_build(base_ref, head_ref, buildtype, workdir, shell_log) -> str:
+    """rebases and builds head_ref on base_ref, returns shell log"""
 
-    print(f"\nRebase and build of {head_ref} onto {base_ref} successful!")
-    print("Archiving build artifacts to run tests in a new workflow")
-    try:
-        test_archive = "test" + yyyy_mm_dd + ".tar.gz"
-        with tarfile.open(name = f"{workdir}/{test_archive}",
-                          mode = "x:gz",
-                          compresslevel = archive_compress_level) as targz:
-            targz.add("src")
-            targz.add("build")
+    print(f"Rebasing {head_ref} onto {base_ref}...")
 
-        pull_request = head_ref.replace('/', '-') + "-to-" + base_ref
+    result, shell_log = subprocess_with_log(f"""
+        cd '{workdir}/src' || exit 1
+            
+        git config user.email "rootci@root.cern"
+        git config user.name 'ROOT Continous Integration'
+        
+        git fetch origin {head_ref}:head || exit 2
+        git checkout head || exit 3
+        
+        git rebase {base_ref} || exit 5
+    """, shell_log)
 
-        upload_file(
-            connection=connection,
-            container=CONTAINER,
-            name=f"to-test/{pull_request}/{prefix}/{test_archive}",
-            path=f"{workdir}/{test_archive}"
-        )
-    except tarfile.TarError as err:
-        print_warning("could not tar artifacts: ", {err})
-    except Exception as err:
-        print_warning("failed to archive/upload artifacts: ", {err})
+    if result != 0:
+        die(result, "Rebase failed", shell_log)
+
+    print("Building changes...")
+    result, shell_log = subprocess_with_log(f"""
+        mkdir -p {workdir}/build
+        cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{os.cpu_count()}'
+    """, shell_log)
+
+    if result != 0:
+        die(result, "Build step after rebase failed", shell_log)
+
+    print(f"Rebase and build of {head_ref} onto {base_ref} successful!")
+
+    return shell_log
 
 
 if __name__ == "__main__":

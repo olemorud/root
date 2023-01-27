@@ -1,7 +1,18 @@
 
-name: 'Build ROOT multi-platform'
+name: 'Root Rebase and Build'
 
 on:
+  schedule:
+    - cron: '0 1 * * *'
+
+  # PR
+  pull_request_target:
+    branches:
+      - '**'
+    paths-ignore:
+      - 'doc/**'
+      - 'documentation/**'
+
   # Allows nightly builds to trigger one run for each branch easily
   workflow_call:
     inputs:
@@ -17,18 +28,6 @@ on:
         type: boolean
         required: true
         default: true
-      force_generation:
-        type: boolean
-        required: false
-        default: false
-
-  # PR
-  pull_request_target:
-    branches:
-      - '**'
-    paths-ignore:
-      - 'doc/**'
-      - 'documentation/**'
   
   # Enables manual start of workflow
   workflow_dispatch:
@@ -57,6 +56,7 @@ env:
   OS_IDENTITY_API_VERSION: 3
   OS_INTERFACE: 'public'
   OS_REGION_NAME: 'cern'
+  PYTHONUNBUFFERED: true
 
 jobs:
   build-linux:
@@ -92,15 +92,8 @@ jobs:
         run: echo "$GITHUB_CONTEXT"
 
       - name: Print debug info
-        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)" "$(pwd)";
-               ls -Zla .;
-               echo event: ${{ github.event_name }};
-               echo head: ${{ github.head_ref }};
-               echo base: ${{ github.base_ref }};
-               echo ref: ${{ github.ref }};
-               echo actor: ${{ github.actor }};
-               echo pull request: ${{ github.event.pull_request }};
-               echo pull request head: ${{ github.event.pull_request.head }};
+        run:  'printf "%s@%s %s\\n" "$(whoami)" "$(hostname)";
+               ls -la
               '
 
       - name: Install root PR
@@ -111,16 +104,16 @@ jobs:
                     --incremental    true
                     --base_ref       ${{ github.base_ref }}
                     --head_ref       refs/pull/${{ github.event.pull_request.number }}/head
-                    --repository     ${{ github.server_url }}/${{github.repository}}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
               "
 
       - name: Install root workflow dispatch/call
-        if:   github.event_name == 'workflow_dispatch' || github.event_name == 'workflow_call'
+        if:   github.event_name == 'workflow_dispatch'
         run: ".github/workflows/rootci-installers/build_root.py
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    ${{ inputs.incremental }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
-                    --repository     ${{ github.server_url }}/${{github.repository}}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
               "
