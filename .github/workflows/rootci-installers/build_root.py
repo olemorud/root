@@ -204,6 +204,8 @@ def main():
         fi
     """, shell_log)
 
+    skipbuild = False
+    
     if result == 123:
         print("Existing build artifacts already up to date, skipping this build step")
         skipbuild = True
