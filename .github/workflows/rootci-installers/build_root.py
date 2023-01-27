@@ -202,7 +202,7 @@ def main():
     """, shell_log)
 
     skipbuild = False
-    
+
     if result == 123:
         print("Existing build artifacts already up to date, skipping this build step")
         skipbuild = True
@@ -288,17 +288,19 @@ def main():
     print("Archiving build artifacts to run tests in a new workflow")
     try:
         test_archive = "test" + yyyy_mm_dd + ".tar.gz"
-        with tarfile.open(name = f"{workdir}/test-{test_archive}",
+        with tarfile.open(name = f"{workdir}/{test_archive}",
                           mode = "x:gz",
                           compresslevel = archive_compress_level) as targz:
             targz.add("src")
             targz.add("build")
 
+        pull_request = head_ref.replace('/', '-') + "-to-" + base_ref
+
         upload_file(
             connection=connection,
             container=CONTAINER,
-            name=f"to-test/{head_ref}-on-{base_ref}/{prefix}/{test_archive}",
-            path=f"{workdir}/{new_archive}"
+            name=f"to-test/{pull_request}/{prefix}/{test_archive}",
+            path=f"{workdir}/{test_archive}"
         )
     except tarfile.TarError as err:
         print_warning("could not tar artifacts: ", {err})
