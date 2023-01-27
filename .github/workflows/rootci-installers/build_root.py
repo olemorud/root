@@ -291,7 +291,8 @@ def main():
     print(f"\nRebase and build of {head_ref} onto {base_ref} successful!")
     print("Archiving build artifacts to run tests in a new workflow")
     try:
-        with tarfile.open(name = f"{workdir}/{new_archive}",
+        test_archive = "test" + yyyy_mm_dd + ".tar.gz"
+        with tarfile.open(name = f"{workdir}/test-{test_archive}",
                           mode = "x:gz",
                           compresslevel = archive_compress_level) as targz:
             targz.add("src")
@@ -300,7 +301,7 @@ def main():
         upload_file(
             connection=connection,
             container=CONTAINER,
-            name=f"to-test/{head_ref}-on-{base_ref}/{prefix}/{new_archive}",
+            name=f"to-test/{head_ref}-on-{base_ref}/{prefix}/{test_archive}",
             path=f"{workdir}/{new_archive}"
         )
     except tarfile.TarError as err:
