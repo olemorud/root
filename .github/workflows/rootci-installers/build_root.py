@@ -197,7 +197,7 @@ def main():
         git checkout temp 2>/dev/null || git checkout -b temp
         
         git fetch origin {base_ref}:{base_ref} || exit 2
-        git checkout {base_ref} || exit 3
+        git checkout -B {base_ref} origin/{base_ref} || exit 3
         
         if [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" ]; then
             exit 123
@@ -268,8 +268,7 @@ def main():
             git config user.name 'ROOT Continous Integration'
             
             git fetch origin {head_ref}:{head_ref} || exit 2
-            git checkout {head_ref} || exit 3
-            git reset --hard || exit 4
+            git checkout -B {head_ref}  origin/{base_ref}|| exit 3
             
             git rebase base || exit 5
         """, shell_log)
