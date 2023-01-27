@@ -29,7 +29,6 @@ from build_utils import (
     die,
     download_latest,
     load_config,
-    print_fancy,
     print_warning,
     shortspaced,
     subprocess_with_log,
@@ -44,6 +43,7 @@ DEFAULT_BUILDTYPE = 'Release'
 def main():
     shell_log = ''
     yyyy_mm_dd = datetime.datetime.today().strftime('%Y-%m-%d')
+    num_cores = os.cpu_count()
 
     # CLI arguments with defaults
     repository       = 'https://github.com/root-project/root'
@@ -79,7 +79,7 @@ def main():
 
     if not base_ref:
         die(1, "base_ref not specified")
-    
+
     if (head_ref == base_ref) or not head_ref:
         print_warning("head_ref not specified or same as base_ref, building base_ref only")
         head_ref = base_ref
@@ -91,9 +91,11 @@ def main():
     windows = 'windows' in platform
 
     if windows:
+        archive_compress_level = 1
         workdir = 'C:/ROOT-CI'
         os.environ['COMSPEC'] = 'powershell.exe'
     else:
+        archive_compress_level = 6
         workdir = '/tmp/workspace'
 
 
@@ -123,21 +125,17 @@ def main():
         """)
     else:
         shell_log += shortspaced(f"""
-            rm -rf {workdir}
-            mkdir -p {workdir}
+            rm -rf {workdir}/*
             cd {workdir}
         """)
 
 
-    # Attempt openstack connection even on non-incremental builds to upload later
     print("\nEstablishing s3 connection")
     # openstack.enable_logging(debug=True)
-    connection = None
-    try:
-        connection = openstack.connect('envvars')
-    except Exception as err:
-        print_warning("Could not connect to openstack:", err)
-        incremental = False
+    connection = openstack.connect('envvars')
+    # without openstack we can't run test workflow, might as well give up here ¯\_(ツ)_/¯
+    if not connection:
+        die(msg="Could not connect to OpenStack")
 
 
     # Download and extract previous build artifacts
@@ -164,7 +162,7 @@ def main():
             incremental = False
 
 
-    # Clone and run generation step on non-incremental builds
+    # Add remote on non incremental builds
     if not incremental:
         print("Doing non-incremental build")
 
@@ -188,77 +186,123 @@ def main():
             die(result, "Failed to pull", shell_log)
 
 
-    # Rebase
+    # First: fetch, build and upload base branch. Skipped if existing artifacts
+    #   are up to date
+    #
+    # Makes some builds marginally slower but populates the artifact storage
+    # which makes most builds much much faster
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/src' || exit 1
-            
-        git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
-        git config user.name 'ROOT Continous Integration'
         
-        git branch -D temp
-        git checkout -b temp
+        git fetch origin {base_ref}:{base_ref} || exit 2
+        git checkout {base_ref} || exit 3
         
-        git branch -D test_base
-        git branch -D {head_ref}
-        git fetch origin {base_ref}:base || exit 2
-        git fetch origin {head_ref}:{head_ref} || exit 3
-        
-        git checkout {head_ref} || exit 4
-        git rebase base || exit 5
+        if [ "$(git rev-parse HEAD)" = "$(git rev-parse '@{{u}}')" ]; then
+            exit 123
+        fi
     """, shell_log)
 
-    if result != 0:
-        die(result, "Rebase failed", shell_log)
+    if result == 123:
+        print("Existing build artifacts already up to date, skipping this build step")
+        skipbuild = True
+    elif result != 0:
+        die(result, f"Failed to pull {base_ref}", shell_log)
 
-    if force_generation or not incremental:
+    if not skipbuild:
+        if not incremental:
+            result, shell_log = subprocess_with_log(
+                f"cmake -S '{workdir}/src' -B '{workdir}/build' {options}",
+                shell_log
+            )
+
+            if result != 0:
+                die(result, "Failed cmake generation step", shell_log)
+
+        result, shell_log = subprocess_with_log(
+            f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{num_cores}'",
+            shell_log
+        )
+
+        if result != 0:
+            die(result, f"Failed to build {base_ref}", shell_log)
+
+        release_branches = r'master|latest-stable|v.*?-.*?-.*?-patches'
+
+        if not re.match(release_branches, base_ref):
+            print_warning("{base_ref} is not a release branch, skipping artifact upload")
+        elif not connection:
+            print_warning("Could not connect to OpenStack, skipping artifact upload")
+        else:
+            print(f"Archiving build artifacts of {base_ref}")
+            new_archive = f"{yyyy_mm_dd}.tar.gz"
+            try:
+                with tarfile.open(name = f"{workdir}/{new_archive}",
+                                  mode = "x:gz",
+                                  compresslevel = archive_compress_level) as targz:
+                    targz.add("src")
+                    targz.add("build")
+
+                upload_file(
+                    connection=connection,
+                    container=CONTAINER,
+                    name=f"{prefix}/{new_archive}",
+                    path=f"{workdir}/{new_archive}"
+                )
+            except tarfile.TarError as err:
+                print_warning("could not tar artifacts: ", {err})
+            except Exception as err:
+                print_warning("failed to archive/upload artifacts: ", {err})
+
+    if head_ref != base_ref:
+        # Rebase PR branch
+        print(f"Rebasing {head_ref} onto {base_ref}...")
+
         result, shell_log = subprocess_with_log(f"""
-            cmake -S {workdir}/src \
-                  -B {workdir}/build \
-                  -DCMAKE_INSTALL_PREFIX={workdir}/install \
-                    {options}
+            cd '{workdir}/src' || exit 1
+                
+            git config user.email "$GITHUB_ACTOR-{yyyy_mm_dd}@root.cern"
+            git config user.name 'ROOT Continous Integration'
+            
+            git fetch origin {head_ref}:{head_ref} || exit 2
+            git checkout {head_ref} || exit 3
+            git reset --hard || exit 4
+            
+            git rebase base || exit 5
         """, shell_log)
 
         if result != 0:
-            die(result, "Failed cmake generation step", shell_log)
+            die(result, "Rebase failed", shell_log)
+
+        # Rebuild after rebase
+        result, shell_log = subprocess_with_log(
+            f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{num_cores}'",
+            shell_log
+        )
+
+        if result != 0:
+            die(result, "Build step after rebase failed", shell_log)
 
 
-    # Build
-    cpus = os.cpu_count()
 
-    result, shell_log = subprocess_with_log(
-        f"cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{cpus}'",
-        shell_log
-    )
+    print(f"\nRebase and build of {head_ref} onto {base_ref} successful!")
+    print("Archiving build artifacts to run tests in a new workflow")
+    try:
+        with tarfile.open(name = f"{workdir}/{new_archive}",
+                          mode = "x:gz",
+                          compresslevel = archive_compress_level) as targz:
+            targz.add("src")
+            targz.add("build")
 
-    if result != 0:
-        die(result, "Build step failed", shell_log)
-
-
-    # Archive and upload if building release branch
-    # TODO: find branches dynamically with `git branch``
-    release_branches = r'master|latest-stable|v.*?-.*?-.*?-patches'
-    
-    if connection and base_ref == head_ref and re.match(release_branches, base_ref):
-        print("Archiving build artifacts")
-        new_archive = f"{yyyy_mm_dd}.tar.gz"
-        try:
-            with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=4) as targz:
-                targz.add("src")
-                targz.add("build")
-
-            upload_file(
-                connection=connection,
-                container=CONTAINER,
-                name=f"{prefix}/{new_archive}",
-                path=f"{workdir}/{new_archive}"
-            )
-        except tarfile.TarError as err:
-            print_warning(f"could not tar artifacts: {err}")
-        except Exception as err:
-            print_warning(err)
-
-    print_fancy("Script to replicate log:\n")
-    print(shell_log)
+        upload_file(
+            connection=connection,
+            container=CONTAINER,
+            name=f"to-test/{prefix}/{new_archive}",
+            path=f"{workdir}/{new_archive}"
+        )
+    except tarfile.TarError as err:
+        print_warning("could not tar artifacts: ", {err})
+    except Exception as err:
+        print_warning("failed to archive/upload artifacts: ", {err})
 
 
 if __name__ == "__main__":

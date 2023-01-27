@@ -50,7 +50,7 @@ def subprocess_with_log(command: str, log="", debug=True) -> Tuple[int, str]:
             log + '\n(\n' + shortspaced(command) + '\n)')
 
 
-def die(code: int, msg: str, log: str = "") -> None:
+def die(code: int = 1, msg: str = "", log: str = "") -> None:
     """prints error code, message and exits"""
     print_error(f"({code}) {msg}")
 
