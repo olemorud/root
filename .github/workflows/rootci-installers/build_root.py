@@ -194,6 +194,8 @@ def main():
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/src' || exit 1
         
+        git checkout temp 2>/dev/null || git checkout -b temp
+        
         git fetch origin {base_ref}:{base_ref} || exit 2
         git checkout {base_ref} || exit 3
         
@@ -296,7 +298,7 @@ def main():
         upload_file(
             connection=connection,
             container=CONTAINER,
-            name=f"to-test/{prefix}/{new_archive}",
+            name=f"to-test/{head_ref}-on-{base_ref}/{prefix}/{new_archive}",
             path=f"{workdir}/{new_archive}"
         )
     except tarfile.TarError as err:
