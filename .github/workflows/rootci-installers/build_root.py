@@ -47,7 +47,6 @@ def main():
 
     # CLI arguments with defaults
     repository       = 'https://github.com/root-project/root'
-    force_generation = False
     platform         = "centos8"
     incremental      = False
     buildtype        = "Release"
@@ -62,9 +61,7 @@ def main():
     )
 
     for opt, val in options:
-        if opt == "--alwaysgenerate":
-            force_generation = val in ('true', '1', 'yes', 'on')
-        elif opt == "--platform":
+        if opt == "--platform":
             platform = val
         elif opt == "--incremental":
             incremental = val in ('true', '1', 'yes', 'on')

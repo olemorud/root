@@ -48,11 +48,6 @@ on:
         type: boolean
         required: true
         default: true
-      force_generation:
-        description: 'Incremental build: Make sure generation step is always run'
-        type: boolean
-        required: false
-        default: false
 
 env:
   OS_APPLICATION_CREDENTIAL_ID: '7f5b64a265244623a3a933308569bdba'
@@ -125,7 +120,6 @@ jobs:
                     --buildtype      ${{ matrix.config }}
                     --platform       ${{ matrix.image }}
                     --incremental    ${{ inputs.incremental }}
-                    --alwaysgenerate ${{ inputs.force_generation }}
                     --base_ref       ${{ inputs.base_ref }}
                     --head_ref       ${{ inputs.head_ref }}
                     --repository     ${{ github.server_url }}/${{github.repository}}
