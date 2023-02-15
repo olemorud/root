@@ -70,7 +70,7 @@ jobs:
 
     strategy:
       matrix:
-        image: ["fedora37", "centos8", "ubuntu18", "ubuntu20", "ubuntu22"]
+        image: ["fedora37-test"]
         config: ["Release"]
         #, "Debug", "RelWithDebInfo"]
       fail-fast: false
