@@ -159,6 +159,7 @@ def main():
 
 
     extra_ctest_flags = f"-C {buildtype}" if os.name == "nt" else ""
+    test_coverage = options_dict['coverage'].lower() == 'on'
 
     if pull_request:
         print("::group::Rebase {base_ref} onto {head_ref}")
@@ -172,7 +173,7 @@ def main():
         if(    options_dict['testing'].lower() == "on"
            and options_dict['roottest'].lower() == "on"):
             print("::group::Run tests")
-            shell_log = test(workdir, shell_log, extra_ctest_flags)
+            shell_log = test(workdir, shell_log, extra_ctest_flags, test_coverage)
             print("::endgroup::")
     else:
         print(f"::group::Build release branch {base_ref}")
@@ -182,7 +183,7 @@ def main():
         if(    options_dict['testing'].lower() == "on"
            and options_dict['roottest'].lower() == "on"):
             print("::group::Run tests")
-            shell_log = test(workdir, shell_log, extra_ctest_flags)
+            shell_log = test(workdir, shell_log, extra_ctest_flags, test_coverage)
             print("::endgroup::")
 
         print("::group::Archive and upload")
@@ -192,12 +193,18 @@ def main():
     print_shell_log(shell_log)
 
 
-def test(workdir: str, shell_log: str, extra_ctest_flags: str):
+def test(workdir: str, shell_log: str, extra_ctest_flags: str, coverage: bool):
 
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/build'
         ctest -j{os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
+
+    if(coverage):
+        result, shell_log = subprocess_with_log(f"""
+            cd '{workdir}/build'
+            lcov --directory . --capture --output-file coverage.info --gcov-tool $(which gcov)
+        """)
     
     if result != 0:
         warning("Some tests failed")
