@@ -150,11 +150,12 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name:  Test Results ${{ matrix.image }} ${{ matrix.config }}
-          path: |
-            /tmp/workspace/build/TestResults.xml
+          path: /tmp/workspace/build/TestResults.xml
 
       - name: Upload to codecov.io
-        uses: codecov/codecov-action@v3
+        uses: codecov/codecov-action@v3.1.1
+        env:
+          OS_APPLICATION_CREDENTIAL_SECRET: '*'
         with:
           file: /tmp/workspace/build/coverage.info
           verbose: true
