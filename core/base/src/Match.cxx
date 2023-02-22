@@ -222,6 +222,8 @@ const char *Matchs(const char*       str,
                    const Pattern_t*  pat,
                    const char**      startpat)
 {
+   volatile static int x;
+
    if (!pat) return nullptr;
    const char* endp = nullptr;
    if (*pat == (Pattern_t)kBOL) {
