@@ -64,8 +64,36 @@ env:
   OS_REGION_NAME: 'cern'
 
 jobs:
+  # WIP testing
+  build-windows:
+    if: always()
+    permissions:
+      contents: read
+
+    runs-on: [self-hosted, windows, x64]
+
+    steps:
+      - name: debug
+        run: dir
+
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch'
+        shell: cmd
+        run: "C:\\setenv.bat x64 && python .github/workflows/root-ci-config/build_root.py
+                    --buildtype      Release
+                    --platform       windows10
+                    --incremental    ${{ inputs.incremental }}
+                    --base_ref       ${{ inputs.base_ref }}
+                    --head_ref       ${{ inputs.head_ref }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+              "
+
+
   build-linux:
-    if: github.repository_owner == 'root-project' || true
+    if: false && (github.repository_owner == 'root-project' || true)
     permissions:
       contents: read
 

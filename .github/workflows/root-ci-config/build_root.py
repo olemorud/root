@@ -224,8 +224,7 @@ def build(workdir, options, buildtype, shell_log):
     if not os.path.exists(f'{workdir}/build/CMakeCache.txt'):
         result, shell_log = subprocess_with_log(f"""
             mkdir -p '{workdir}/build'
-            cmake -S '{workdir}/src' -B '{workdir}/build' {options} \\
-                -DCMAKE_BUILD_TYPE={buildtype}
+            cmake -S '{workdir}/src' -B '{workdir}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
         """, shell_log)
 
         if result != 0:
