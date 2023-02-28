@@ -46,12 +46,13 @@ def main():
     this_script_dir = os.path.dirname(os.path.abspath(__file__))
 
     parser = argparse.ArgumentParser()
-    parser.add_argument("--platform",    default="centos8", help="Platform to build on")
-    parser.add_argument("--incremental", default=False,     help="Do incremental build")
-    parser.add_argument("--buildtype",   default="Release", help="Release, Debug or RelWithDebInfo")
-    parser.add_argument("--base_ref",    default=None,      help="Ref to target branch")
-    parser.add_argument("--head_ref",    default=None,      help="Ref to feature branch")
-    parser.add_argument("--repository",  default="https://github.com/root-project/root.git",
+    parser.add_argument("--platform",     default="centos8", help="Platform to build on")
+    parser.add_argument("--incremental",  default=False,     help="Do incremental build")
+    parser.add_argument("--buildtype",    default="Release", help="Release, Debug or RelWithDebInfo")
+    parser.add_argument("--base_ref",     default=None,      help="Ref to target branch")
+    parser.add_argument("--head_ref",     default=None,      help="Ref to feature branch")
+    parser.add_argument("--architecture", default=None,      help="")
+    parser.add_argument("--repository",   default="https://github.com/root-project/root.git",
                         help="url to repository")
 
     args = parser.parse_args()
@@ -76,7 +77,10 @@ def main():
         # windows
         os.environ['COMSPEC'] = 'powershell.exe'
         result, shell_log = subprocess_with_log(f"""
-            Remove-Item -Recurse -Force -Path {WORKDIR}
+            $ErrorActionPreference = 'Stop'
+            if (Test-Path {WORKDIR}) {{
+                Remove-Item -Recurse -Force -Path {WORKDIR}
+            }}
             New-Item -Force -Type directory -Path {WORKDIR}
             Set-Location -LiteralPath {WORKDIR}
         """, shell_log)
@@ -101,6 +105,12 @@ def main():
     }
     options = cmake_options_from_dict(options_dict)
 
+    if os.name == 'nt':
+        options = f" -Thost={args.architecture} " + options
+
+        if args.architecture == 'x86':
+            options = "-A Win32" + options
+
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     obj_prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
 
@@ -119,7 +129,7 @@ def main():
     shell_log = pull(repository, base_ref, incremental, shell_log)
 
     extra_ctest_flags = ""
-
+    
     if os.name == "nt":
         extra_ctest_flags += "-C " + buildtype
 
@@ -190,7 +200,7 @@ def download_and_extract(obj_prefix: str, shell_log: str):
 @output_group("Run tests")
 def test(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
-        cd '{workdir}/build'
+        cd '{WORKDIR}/build'
         ctest -j{os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
     """, shell_log)
     
@@ -218,19 +228,24 @@ def archive_and_upload(archive_name, prefix):
 
 @output_group("Build")
 def build(options, buildtype, shell_log):
+    generator_flags = "-- '-verbosity:minimal'" if os.name == "nt" else ""
+
+    if not os.path.isdir(f'{WORKDIR}/build'):
+        result, shell_log = subprocess_with_log(f"mkdir {WORKDIR}/build", shell_log)
+
+        if result != 0:
+            die(result, "Failed to create build directory", shell_log)
+
     if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
         result, shell_log = subprocess_with_log(f"""
-            mkdir -p '{WORKDIR}/build'
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} \\
-                -DCMAKE_BUILD_TYPE={buildtype}
+            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
         """, shell_log)
 
         if result != 0:
             die(result, "Failed cmake generation step", shell_log)
 
     result, shell_log = subprocess_with_log(f"""
-        mkdir '{WORKDIR}/build'
-        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}'
+        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}' {generator_flags}
     """, shell_log)
 
     if result != 0:
