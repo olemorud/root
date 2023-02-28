@@ -26,6 +26,7 @@ from build_utils import (
     die,
     download_latest,
     load_config,
+    output_group,
     print_shell_log,
     subprocess_with_log,
     upload_file,
@@ -34,7 +35,9 @@ from build_utils import (
 
 S3CONTAINER = 'ROOT-build-artifacts'  # Used for uploads
 S3URL = 'https://s3.cern.ch/swift/v1/' + S3CONTAINER  # Used for downloads
-
+WORKDIR = '/tmp/workspace' if os.name != 'nt' else 'C:/ROOT-CI'
+CONNECTION = openstack.connect(cloud='envvars') if os.getenv('OS_REGION_NAME') else None
+COMPRESSIONLEVEL = 6 if os.name != 'nt' else 1
 
 def main():
     # openstack.enable_logging(debug=True)
@@ -66,36 +69,29 @@ def main():
     if not head_ref or (head_ref == base_ref):
         warning("head_ref same as base_ref, assuming non-PR build")
         pull_request = False
-        print("\nEstablishing s3 connection")
-        connection = openstack.connect(cloud='envvars')
     else:
         pull_request = True
-        connection = None
 
     if os.name == 'nt':
         # windows
-        compressionlevel = 1
-        workdir = 'C:/ROOT-CI'
         os.environ['COMSPEC'] = 'powershell.exe'
         result, shell_log = subprocess_with_log(f"""
-            Remove-Item -Recurse -Force -Path {workdir}
-            New-Item -Force -Type directory -Path {workdir}
-            Set-Location -LiteralPath {workdir}
+            Remove-Item -Recurse -Force -Path {WORKDIR}
+            New-Item -Force -Type directory -Path {WORKDIR}
+            Set-Location -LiteralPath {WORKDIR}
         """, shell_log)
     else:
         # mac/linux/POSIX
-        compressionlevel = 6
-        workdir = '/tmp/workspace'
         result, shell_log = subprocess_with_log(f"""
-            mkdir -p {workdir}
-            rm -rf {workdir}/*
-            cd {workdir}
+            mkdir -p {WORKDIR}
+            rm -rf {WORKDIR}/*
+            cd {WORKDIR}
         """, shell_log)
 
     if result != 0:
         die(result, "Failed to clean up previous artifacts", shell_log)
 
-    os.chdir(workdir)
+    os.chdir(WORKDIR)
 
     # Load CMake options from file
     options_dict = {
@@ -108,92 +104,91 @@ def main():
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     obj_prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
 
-    # to make testing of CI in forks not impact artifacts
+    # Make testing of CI in forks not impact artifacts
     if 'root-project/root' not in repository:
         obj_prefix = f"ci-testing/{repository.split('/')[-2]}/" + obj_prefix
 
-    # Download and extract previous build artifacts
     if incremental:
-        print("::group::Download previous build artifacts")
-        print("Attempting incremental build")
-
+        print("Attempting to download")
         try:
-            tar_path, shell_log = download_latest(S3URL, obj_prefix, workdir, shell_log)
-
-            print(f"\nExtracting archive {tar_path}")
-
-            with tarfile.open(tar_path) as tar:
-                tar.extractall()
-
-            shell_log += f'\ntar -xf {tar_path}\n'
-
+            shell_log += download_and_extract(obj_prefix, shell_log)
         except Exception as err:
-            warning("failed to download/extract:", err)
-            shutil.rmtree(f'{workdir}/src', ignore_errors=True)
-            shutil.rmtree(f'{workdir}/build', ignore_errors=True)
-
+            warning(f'Failed to download: {err}')
             incremental = False
 
-        print("::endgroup::")
+    shell_log = pull(repository, base_ref, incremental, shell_log)
 
-    print(f"::group::Pull {base_ref}")
+    extra_ctest_flags = ""
 
-    if not incremental:
-        print("Doing non-incremental build")
+    if os.name == "nt":
+        extra_ctest_flags += "-C " + buildtype
 
-        result, shell_log = subprocess_with_log(f"""
-            git clone --branch {base_ref} --single-branch {repository} "{workdir}/src"
-        """, shell_log)
-    else:
-        result, shell_log = subprocess_with_log(f"""
-            cd '{workdir}/src'      || exit 1
-            git checkout {base_ref} || exit 2
-            git fetch               || exit 3
-            git reset --hard @{{u}} || exit 4
-        """, shell_log)
-
-    print("::endgroup::")
-
-    if result != 0:
-        die(result, f"Failed to pull {base_ref}", shell_log)
-
-
-    extra_ctest_flags = f"-C {buildtype}" if os.name == "nt" else ""
+    testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
     if pull_request:
-        print("::group::Rebase {base_ref} onto {head_ref}")
-        shell_log = rebase(base_ref, head_ref, workdir, shell_log)
-        print("::endgroup::")
+        shell_log = rebase(base_ref, head_ref, WORKDIR, shell_log)
 
-        print("::group::Build")
-        shell_log = build(workdir, options, buildtype, shell_log)
-        print("::endgroup::")
+    shell_log = build(options, buildtype, shell_log)
 
-        if(    options_dict['testing'].lower() == "on"
-           and options_dict['roottest'].lower() == "on"):
-            print("::group::Run tests")
-            shell_log = test(workdir, shell_log, extra_ctest_flags)
-            print("::endgroup::")
-    else:
-        print(f"::group::Build release branch {base_ref}")
-        shell_log = build(workdir, options, buildtype, shell_log)
-        print("::endgroup::")
+    if testing:
+        shell_log = test(shell_log, extra_ctest_flags)
 
-        if(    options_dict['testing'].lower() == "on"
-           and options_dict['roottest'].lower() == "on"):
-            print("::group::Run tests")
-            shell_log = test(workdir, shell_log, extra_ctest_flags)
-            print("::endgroup::")
-
-        print("::group::Archive and upload")
-        archive_and_upload(yyyy_mm_dd, workdir, connection, compressionlevel, obj_prefix)
-        print("::endgroup::")
+    archive_and_upload(yyyy_mm_dd, obj_prefix)
 
     print_shell_log(shell_log)
 
 
-def test(workdir: str, shell_log: str, extra_ctest_flags: str):
+@output_group("Pull/clone branch")
+def pull(repository:str, branch: str, incremental: bool, shell_log: str):
+    attempts = 5
+    returncode = 1
 
+    while attempts > 0 and returncode != 0:
+        attempts -= 1
+
+        if not incremental:
+            returncode, shell_log = subprocess_with_log(f"""
+                git clone --branch {branch} --single-branch {repository} "{WORKDIR}/src"
+            """, shell_log)
+        else:
+            returncode, shell_log = subprocess_with_log(f"""
+                cd '{WORKDIR}/src'      || exit 1
+                git checkout {branch}   || exit 2
+                git fetch               || exit 3
+                git reset --hard @{{u}} || exit 4
+            """, shell_log)
+
+    if returncode != 0:
+        die(returncode, f"Failed to pull {branch}", shell_log)
+    
+    return shell_log
+
+
+@output_group("Download previous build artifacts")
+def download_and_extract(obj_prefix: str, shell_log: str):
+    print("Attempting incremental build")
+
+    try:
+        tar_path, shell_log = download_latest(S3URL, obj_prefix, WORKDIR, shell_log)
+
+        print(f"\nExtracting archive {tar_path}")
+
+        with tarfile.open(tar_path) as tar:
+            tar.extractall()
+
+        shell_log += f'\ntar -xf {tar_path}\n'
+
+    except Exception as err:
+        warning("failed to download/extract:", err)
+        shutil.rmtree(f'{WORKDIR}/src', ignore_errors=True)
+        shutil.rmtree(f'{WORKDIR}/build', ignore_errors=True)
+        raise err
+    
+    return shell_log
+
+
+@output_group("Run tests")
+def test(shell_log: str, extra_ctest_flags: str) -> str:
     result, shell_log = subprocess_with_log(f"""
         cd '{workdir}/build'
         ctest -j{os.cpu_count()} --output-junit TestResults.xml {extra_ctest_flags}
@@ -205,26 +200,28 @@ def test(workdir: str, shell_log: str, extra_ctest_flags: str):
     return shell_log
 
 
-def archive_and_upload(archive_name, workdir, connection, compressionlevel, prefix):
+@output_group("Archive and upload")
+def archive_and_upload(archive_name, prefix):
     new_archive = f"{archive_name}.tar.gz"
 
-    with tarfile.open(f"{workdir}/{new_archive}", "x:gz", compresslevel=compressionlevel) as targz:
+    with tarfile.open(f"{WORKDIR}/{new_archive}", "x:gz", compresslevel=COMPRESSIONLEVEL) as targz:
         targz.add("src")
         targz.add("build")
 
     upload_file(
-        connection=connection,
+        connection=CONNECTION,
         container=S3CONTAINER,
         dest_object=f"{prefix}/{new_archive}",
-        src_file=f"{workdir}/{new_archive}"
+        src_file=f"{WORKDIR}/{new_archive}"
     )
 
 
-def build(workdir, options, buildtype, shell_log):
-    if not os.path.exists(f'{workdir}/build/CMakeCache.txt'):
+@output_group("Build")
+def build(options, buildtype, shell_log):
+    if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
         result, shell_log = subprocess_with_log(f"""
-            mkdir -p '{workdir}/build'
-            cmake -S '{workdir}/src' -B '{workdir}/build' {options} \\
+            mkdir -p '{WORKDIR}/build'
+            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} \\
                 -DCMAKE_BUILD_TYPE={buildtype}
         """, shell_log)
 
@@ -232,8 +229,8 @@ def build(workdir, options, buildtype, shell_log):
             die(result, "Failed cmake generation step", shell_log)
 
     result, shell_log = subprocess_with_log(f"""
-        mkdir '{workdir}/build'
-        cmake --build '{workdir}/build' --config '{buildtype}' --parallel '{os.cpu_count()}'
+        mkdir '{WORKDIR}/build'
+        cmake --build '{WORKDIR}/build' --config '{buildtype}' --parallel '{os.cpu_count()}'
     """, shell_log)
 
     if result != 0:
@@ -242,11 +239,14 @@ def build(workdir, options, buildtype, shell_log):
     return shell_log
 
 
-def rebase(base_ref, head_ref, workdir, shell_log) -> str:
+@output_group("Rebase")
+def rebase(base_ref, head_ref, shell_log) -> str:
     """rebases head_ref on base_ref, returns shell log"""
 
+    # This mental gymnastics is neccessary because the cmake build fetches 
+    # roottest based on the current branch of ROOT
     result, shell_log = subprocess_with_log(f"""
-        cd '{workdir}/src' || exit 1
+        cd '{WORKDIR}/src' || exit 1
         
         git config user.email "rootci@root.cern"
         git config user.name 'ROOT Continous Integration'
