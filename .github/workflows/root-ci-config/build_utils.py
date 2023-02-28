@@ -5,11 +5,35 @@ import os
 import subprocess
 import sys
 import textwrap
+from functools import wraps
 from http import HTTPStatus
-from typing import Dict, Tuple
+from typing import Callable, Dict, Tuple
 
 from openstack.connection import Connection
 from requests import get
+
+
+def output_group(title: str):
+    """ decorator that places function's stdout/stderr output in a
+        dropdown group when running on github workflows """
+    def group(func: Callable):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            print("::group::" + title)
+
+            try:
+                result = func(*args, **kwargs)
+            except Exception as e:
+                print("::endgroup::")
+                raise e
+            
+            print("::endgroup::")
+
+            return result
+
+        return wrapper if os.getenv("GITHUB_ACTIONS") else func
+
+    return group
 
 
 def print_fancy(*values, sgr=1, **kwargs) -> None:
@@ -168,4 +192,5 @@ def download_latest(url: str, prefix: str, destination: str, shell_log: str) -> 
     else:
         shell_log += f"\nwget -x -O artifacts.tar.gz {url}/{latest}\n"
 
+    return f"{destination}/artifacts.tar.gz", shell_log
     return f"{destination}/artifacts.tar.gz", shell_log
