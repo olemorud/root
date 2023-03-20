@@ -162,10 +162,10 @@ def pull(repository:str, branch: str, incremental: bool, shell_log: str):
             """, shell_log)
         else:
             returncode, shell_log = subprocess_with_log(f"""
-                cd '{WORKDIR}/src'      || exit 1
-                git checkout {branch}   || exit 2
-                git fetch               || exit 3
-                git reset --hard @{{u}} || exit 4
+                cd '{WORKDIR}/src'
+                git checkout {branch}
+                git fetch
+                git reset --hard '@{{u}}'
             """, shell_log)
 
     if returncode != 0:
