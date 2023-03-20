@@ -106,7 +106,7 @@ def main():
     options = cmake_options_from_dict(options_dict)
 
     if os.name == 'nt':
-        options = f" -Thost={args.architecture} " + options
+        options = " -Thost=x64 " + options
 
         if args.architecture == 'x86':
             options = "-AWin32" + options
