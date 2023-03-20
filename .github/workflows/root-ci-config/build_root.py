@@ -109,7 +109,7 @@ def main():
         options = f" -Thost={args.architecture} " + options
 
         if args.architecture == 'x86':
-            options = "-A Win32" + options
+            options = "-AWin32" + options
 
     option_hash = sha1(options.encode('utf-8')).hexdigest()
     obj_prefix = f'{platform}/{base_ref}/{buildtype}/{option_hash}'
@@ -131,7 +131,7 @@ def main():
     extra_ctest_flags = ""
     
     if os.name == "nt":
-        extra_ctest_flags += "-C " + buildtype
+        extra_ctest_flags += "-C" + buildtype
 
     testing: bool = options_dict['testing'].lower() == "on" and options_dict['roottest'].lower() == "on"
 
@@ -238,7 +238,7 @@ def build(options, buildtype, shell_log):
 
     if not os.path.exists(f'{WORKDIR}/build/CMakeCache.txt'):
         result, shell_log = subprocess_with_log(f"""
-            cmake -S '{WORKDIR}/src' -B '{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
+            cmake '-S{WORKDIR}/src' '-B{WORKDIR}/build' {options} -DCMAKE_BUILD_TYPE={buildtype}
         """, shell_log)
 
         if result != 0:
