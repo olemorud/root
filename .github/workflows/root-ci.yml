@@ -74,11 +74,14 @@ jobs:
       fail-fast: false
       matrix:
         config: ["Debug", "Release"]
-        arch: ["x86", "x64"]
-
-    runs-on: [self-hosted, windows, x64]
+        arch: [X64]
 
     name: Windows 10 ${{ matrix.arch }} ${{ matrix.config }}
+
+    runs-on:
+      - self-hosted
+      - windows
+      - ${{ matrix.arch }}
 
     steps:
       - name: Checkout
