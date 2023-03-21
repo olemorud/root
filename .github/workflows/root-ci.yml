@@ -78,7 +78,7 @@ jobs:
 
     name: Windows 10 ${{ matrix.arch }} ${{ matrix.config }}
 
-    runs-on:
+    runs-on: # Using '[self-hosted, windows, ${{ matrix.arch }}]' does not work for some reason :)
       - self-hosted
       - windows
       - ${{ matrix.arch }}
