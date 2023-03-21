@@ -78,13 +78,13 @@ jobs:
             arch: ARM64
             config: Release
     
-    name: ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
+    name: macos ${{ matrix.platform }} ${{ matrix.arch }} ${{ matrix.config }}
 
     runs-on: # Using '[self-hosted, ..., ...]' does not work for some reason :)
       - self-hosted
       - macOS
       - ${{ matrix.arch }}
-      - ${{ matrix.platform }} 
+      - ${{ matrix.platform }}
 
     steps:
       - name: Checkout
