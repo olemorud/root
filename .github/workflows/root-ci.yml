@@ -64,6 +64,79 @@ env:
   OS_REGION_NAME: 'cern'
 
 jobs:
+  build-windows:
+    if: github.repository_owner == 'root_project'
+
+    permissions:
+      contents: read
+
+    strategy:
+      fail-fast: false
+      matrix:
+        config: ["Debug", "Release"]
+        arch: ["x86", "x64"]
+
+    runs-on: [self-hosted, windows, x64]
+
+    name: Windows 10 ${{ matrix.arch }} ${{ matrix.config }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Pull Request Build
+        if: github.event_name == 'pull_request'
+        env:
+          INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  $INCREMENTAL
+                    --base_ref     ${{ github.base_ref }}
+                    --head_ref     refs/pull/${{ github.event.pull_request.number }}/head
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.arch }}  "
+
+      - name: Workflow dispatch/call
+        if:   github.event_name == 'workflow_dispatch'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  ${{ inputs.incremental }}
+                    --base_ref     ${{ inputs.base_ref }}
+                    --head_ref     ${{ inputs.head_ref }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.arch }}  "
+
+      - name: Nightly build
+        if:   github.event_name == 'schedule'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype    ${{ matrix.config }}
+                    --platform     windows10
+                    --incremental  false
+                    --base_ref     ${{ github.base_ref }}
+                    --repository   ${{ github.server_url }}/${{ github.repository }}
+                    --architecture ${{ matrix.arch }}  "
+
+      - name: Update artifacts after push to release branch
+        if:   github.event_name == 'push'
+        shell: cmd
+        run: "C:\\setenv.bat ${{ matrix.arch }} &&
+              python .github/workflows/root-ci-config/build_root.py
+                    --buildtype      ${{ matrix.config }}
+                    --platform       windows10
+                    --incremental    true
+                    --base_ref       ${{ github.ref_name }}
+                    --repository     ${{ github.server_url }}/${{ github.repository }}
+                    --architecture   ${{ matrix.arch }}  "
+
+
   build-linux:
     if: github.repository_owner == 'root-project'
     permissions:
