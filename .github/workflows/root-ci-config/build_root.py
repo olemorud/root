@@ -134,7 +134,7 @@ def main():
         extra_ctest_flags = ""
         
         if WINDOWS:
-            extra_ctest_flags += " -C" + args.buildtype
+            extra_ctest_flags += "-C " + args.buildtype
 
         shell_log = run_ctest(shell_log, extra_ctest_flags)
 
