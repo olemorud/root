@@ -21,22 +21,7 @@ jobs:
       actions: read
 
     steps:
-      - name: Dump github.event.workflow_run
+      - name: Print the ID of the run that triggered this
         env:
-          RUN: ${{ toJSON( github.event.workflow_run ) }}
-        run: echo "$RUN"
-
-      - name: Download and Extract Artifacts
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-           mkdir -p artifacts && cd artifacts
-
-           artifacts_url=${{ github.event.workflow_run.artifacts_url }}
-
-           gh api --paginate "$artifacts_url" -q '.artifacts[] | [.name, .archive_download_url] | @tsv' | while read artifact
-           do
-             IFS=$'\t' read name url <<< "$artifact"
-             gh api $url > "$name.zip"
-             unzip -d "$name" "$name.zip"
-           done
+          ID: ${{ github.event.workflow_run.id }}
+        run: echo "$ID"
